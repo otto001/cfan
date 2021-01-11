@@ -1,0 +1,9 @@
+[Unit]
+Description=cfan, smart fan controlling software
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/cfan
+
+[Install]
+WantedBy=multi-user.target
