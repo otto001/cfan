@@ -28,7 +28,7 @@ private:
     void writeToStdout();
     int interval = 500;
 public:
-    int getInterval() const;
+    [[nodiscard]] int getInterval() const;
     //ms
 
 
@@ -38,6 +38,7 @@ public:
     void init();
     [[noreturn]] void run();
     [[noreturn]] void curses();
+    void detect();
 
     ThermalZone* getThermalZone(const std::string& name);
 

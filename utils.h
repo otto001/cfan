@@ -12,8 +12,11 @@
 #include <utility>
 #include <iostream>
 
-int readIntFromPath(const std::string& path);
+#define SEC_TO_MICROSEC(x) ((x)*1000000)
+
+std::string readFile(const std::string& path);
 int parseInt(const std::string& value);
+int readIntFromFile(const std::string& path);
 
 std::string exec(const char* cmd);
 
@@ -29,6 +32,7 @@ inline double lerp(double a, double b, double alpha) {
     return a*(1-alpha) + b*alpha;
 }
 
+bool isYes(const std::string string);
 
 
 class LoadingException : public std::exception {
@@ -62,4 +66,7 @@ T readYamlField(YAML::Node node, const std::string& name, T defaultValue) {
         return defaultValue;
     }
 }
+
+char asciiToLower(char in);
+
 #endif //CFAN_UTILS_H

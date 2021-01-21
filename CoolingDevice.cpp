@@ -61,7 +61,7 @@ bool CoolingDevice::setSpeed(double speed, bool force) {
     auto minSpeedInt = (int) round(minSpeed * 255);
     auto startSpeedInt = (int) round(startSpeed * 255);
 
-    if (!isPump) {
+    if (!isPump && !force) {
         if (speedInt > 0 && speedInt < minSpeedInt) {
             speed = minSpeed;
             speedInt = minSpeedInt;
@@ -113,7 +113,7 @@ bool CoolingDevice::setToManual() {
 
 int CoolingDevice::readRpm() {
     auto inputPath = std::string(getFanPath()) + "_input";
-    return readIntFromPath(inputPath);
+    return readIntFromFile(inputPath);
 }
 
 ThermalZone *CoolingDevice::getHottestZone() {
@@ -310,4 +310,58 @@ double CoolingDevice::getBuildUp() const {
 
 double CoolingDevice::getCurrentSetSpeed() const {
     return currentSetSpeed;
+}
+
+void CoolingDevice::setPath(const std::filesystem::path &path) {
+    CoolingDevice::path = path;
+}
+
+void CoolingDevice::setName(const std::string &name) {
+    CoolingDevice::name = name;
+}
+
+bool CoolingDevice::getIsPump() const {
+    return isPump;
+}
+
+void CoolingDevice::setIsPump(bool isPump) {
+    CoolingDevice::isPump = isPump;
+}
+
+const int *CoolingDevice::getRpmCurve() const {
+    return rpmCurve;
+}
+
+double CoolingDevice::getStartSpeed() const {
+    return startSpeed;
+}
+
+void CoolingDevice::setStartSpeed(double startSpeed) {
+    CoolingDevice::startSpeed = startSpeed;
+}
+
+double CoolingDevice::getMinSpeed() const {
+    return minSpeed;
+}
+
+void CoolingDevice::setMinSpeed(double minSpeed) {
+    CoolingDevice::minSpeed = minSpeed;
+}
+
+bool CoolingDevice::setToQFanControl() {
+    std::string enablePath = getPwmPath();
+    enablePath.append("_enable");
+
+    std::ofstream file;
+    file.open(enablePath, std::ios::out | std::ios::trunc);
+
+    if (file.is_open()) {
+        file << 5;
+        file.close();
+
+        setSpeed(currentSetSpeed, true);
+        return true;
+    }
+    std::cerr << "Failed to set mode of cooling device " << name << " to QFan!" << std::endl;
+    return false;
 }

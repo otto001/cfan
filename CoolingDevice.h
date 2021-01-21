@@ -14,11 +14,34 @@ class Control;
 class CoolingDevice {
 public:
     CoolingDevice(Control* control);
+    friend class Detector;
 protected:
     Control* control;
     std::filesystem::path path;
+public:
+    void setPath(const std::filesystem::path &path);
+
+protected:
 
     std::string name;
+public:
+    void setName(const std::string &name);
+
+    bool getIsPump() const;
+
+    void setIsPump(bool isPump);
+
+    const int *getRpmCurve() const;
+
+    double getStartSpeed() const;
+
+    void setStartSpeed(double startSpeed);
+
+    double getMinSpeed() const;
+
+    void setMinSpeed(double minSpeed);
+
+protected:
 
     bool isPump = false;
     int rpmCurve[11]{};
@@ -48,15 +71,13 @@ public:
     [[nodiscard]] double getCurrentSetSpeed() const;
     [[nodiscard]] double getBuildUp() const;
 
-protected:
-
     double buildUp = 0;
     static constexpr double buildUpThreshold = 1000;
     short unresponsiveCounter = 0;
 
     bool setSpeed(double speed, bool force=false);
-
     bool setToManual();
+    bool setToQFanControl();
 
     [[nodiscard]] int readRpm();
 

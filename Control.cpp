@@ -5,13 +5,19 @@
 #include "Control.h"
 #include "Table.h"
 #include "utils.h"
+#include "detection/Detector.h"
 #include <vector>
 #include <unistd.h>
 #include <iostream>
 
 
 bool Control::load() {
-    YAML::Node config = YAML::LoadFile(configPath);
+    YAML::Node config;
+    try {
+        config = YAML::LoadFile(configPath);
+    } catch (YAML::BadFile) {
+        return false;
+    }
 
     auto thermalConfig = config["thermal"];
     auto thermalZonesConfig = thermalConfig["zones"].as<std::vector<YAML::Node>>();
@@ -80,6 +86,11 @@ void Control::init() {
     }
 }
 
+void Control::detect() {
+    Detector detector = Detector(this);
+    detector.run();
+}
+
 void Control::update() {
 
     for (auto zone : thermalZones) {
@@ -115,4 +126,6 @@ const std::vector<CoolingDevice *> &Control::getCoolingDevices() const {
 int Control::getInterval() const {
     return interval;
 }
+
+
 

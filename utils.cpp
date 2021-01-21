@@ -9,6 +9,20 @@
 #include <string>
 #include <array>
 #include <algorithm>
+#include <cctype>
+
+std::string readFile(const std::string &path) {
+    std::ifstream file;
+    file.open(path);
+
+    if (file.is_open()) {
+        std::string str((std::istreambuf_iterator<char>(file)),
+                        std::istreambuf_iterator<char>());
+        return str;
+    }
+
+    return "";
+}
 
 int parseInt(const std::string& value) {
     try {
@@ -20,18 +34,8 @@ int parseInt(const std::string& value) {
     }
 }
 
-int readIntFromPath(const std::string& path) {
-
-    std::ifstream file;
-    file.open(path);
-
-    if (file.is_open()) {
-        std::string value;
-        getline(file, value);
-        return parseInt(value);
-    }
-
-    return -1;
+int readIntFromFile(const std::string& path) {
+    return parseInt(readFile(path));
 }
 
 
@@ -68,10 +72,24 @@ void trim(std::string &s) {
     rtrim(s);
 }
 
+bool isYes(const std::string string) {
+    std::string lowercase = string;
+    std::transform(lowercase.begin(), lowercase.end(), lowercase.begin(),
+                   [](unsigned char c){ return asciiToLower(c); });
+    return lowercase == "yes" || lowercase == "y" || lowercase == "1" || lowercase == "t" || lowercase == "true";
+}
+
+char asciiToLower(char in) {
+    if (in <= 'Z' && in >= 'A')
+        return in - ('Z' - 'z');
+    return in;
+}
 
 const char *LoadingException::what() const noexcept(true) {
     return msg.c_str();
 }
+
+
 
 LoadingException::LoadingException(const std::string& location) : location(location) {
     msg = ("FATAL: Error reading " + location + " from cfan config.yaml");

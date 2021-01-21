@@ -13,7 +13,7 @@ int ThermalCpu::_getTemp() {
 
         std::string inputPath = path;
         inputPath.append("_input");
-        int temp = readIntFromPath(inputPath);
+        int temp = readIntFromFile(inputPath);
 
         if (temp > maxTemp) {
             maxTemp = temp;
