@@ -1,3 +1,0 @@
-/home/otto001/projects/cfan/cmake-build-release/CMakeFiles/rebuild_cache.dir
-/home/otto001/projects/cfan/cmake-build-release/CMakeFiles/edit_cache.dir
-/home/otto001/projects/cfan/cmake-build-release/CMakeFiles/cfan.dir
