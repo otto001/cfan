@@ -4,15 +4,22 @@ project(cfan)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_executable(cfan main.cpp Control.cpp Control.h CoolingDevice.cpp CoolingDevice.h thermal/ThermalZone.cpp thermal/ThermalZone.h thermal/ThermalCpu.cpp thermal/ThermalCpu.h utils.h utils.cpp thermal/ThermalNvidiaGpu.cpp thermal/ThermalNvidiaGpu.h Table.h Table.cpp detection/Detector.cpp detection/Detector.h)
+add_executable(cfan main.cpp Control.cpp Control.h CoolingDevice.cpp CoolingDevice.h thermal/ThermalZone.cpp thermal/ThermalZone.h thermal/ThermalCpu.cpp thermal/ThermalCpu.h utils.h utils.cpp thermal/ThermalNvidiaGpu.cpp thermal/ThermalNvidiaGpu.h Table.h Table.cpp detection/Detector.cpp detection/Detector.h system-utils.cpp system-utils.h)
 
-find_package(Curses REQUIRED)
 
-target_link_libraries(cfan libyaml-cpp.a)
-target_link_libraries(cfan ${CURSES_LIBRARIES})
+
+include_directories(libs/yaml-cpp/include)
+add_subdirectory(libs/yaml-cpp)
+target_link_libraries(cfan libyaml-cpp)
+
+#find_package(Curses REQUIRED)
+
+#target_link_libraries(cfan ${CURSES_LIBRARIES})
 target_link_libraries(cfan stdc++fs)
 
-install(TARGETS cfan DESTINATION /usr/local/bin/)
-install(FILES cfan.service DESTINATION /etc/systemd/system/)
-install(CODE "execute_process(COMMAND /bin/sh enable-service.sh
-            WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})")
+
+#install(TARGETS cfan DESTINATION /usr/local/bin/)
+#install(FILES cfan.service DESTINATION /etc/systemd/system/)
+#install(CODE "execute_process(COMMAND /bin/sh enable-service.sh
+#            WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})")
+

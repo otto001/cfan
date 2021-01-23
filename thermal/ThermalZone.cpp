@@ -13,7 +13,7 @@ const std::string &ThermalZone::getName() const {
 }
 
 int ThermalZone::_getTemp() {
-    std::string inputPath = path;
+    auto inputPath = path.string();
     inputPath.append("_input");
     int result = readIntFromFile(inputPath);
     if (result == -1) {
