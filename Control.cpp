@@ -5,9 +5,9 @@
 #include "Control.h"
 #include "Table.h"
 #include "utils.h"
+#include "system-utils.h"
 #include "detection/Detector.h"
 #include <vector>
-#include <unistd.h>
 #include <iostream>
 
 
@@ -59,11 +59,11 @@ void Control::init() {
         auto t1 = std::chrono::high_resolution_clock::now();
         update();
         auto t2 = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
-        long sleepDuration = (interval*1000) - duration;
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
+        long sleepDuration = interval - duration;
 
         if (sleepDuration > 0) {
-            usleep(sleepDuration);
+            System::sleep(sleepDuration);
         }
 
     }
@@ -76,11 +76,11 @@ void Control::init() {
         update();
         writeToStdout();
         auto t2 = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
-        long sleepDuration = (interval*1000) - duration;
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
+        long sleepDuration = interval - duration;
 
         if (sleepDuration > 0) {
-            usleep(sleepDuration);
+            System::sleep(sleepDuration);
         }
 
     }

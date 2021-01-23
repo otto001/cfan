@@ -25,7 +25,7 @@ const std::string &CoolingDevice::getName() const {
 
 int CoolingDevice::getIndex() const {
 
-    std::string fileName = path.filename();
+    std::string fileName = path.filename().string();
     size_t last_index = fileName.find_last_not_of("0123456789");
     std::string digits = fileName.substr(last_index + 1);
     int result = -1;
@@ -94,7 +94,7 @@ bool CoolingDevice::setSpeed(double speed, bool force) {
 }
 
 bool CoolingDevice::setToManual() {
-    std::string enablePath = getPwmPath();
+    std::string enablePath = getPwmPath().string();
     enablePath.append("_enable");
 
     std::ofstream file;
@@ -112,7 +112,7 @@ bool CoolingDevice::setToManual() {
 }
 
 int CoolingDevice::readRpm() {
-    auto inputPath = std::string(getFanPath()) + "_input";
+    auto inputPath = getFanPath().string() + "_input";
     return readIntFromFile(inputPath);
 }
 
@@ -349,7 +349,7 @@ void CoolingDevice::setMinSpeed(double minSpeed) {
 }
 
 bool CoolingDevice::setToQFanControl() {
-    std::string enablePath = getPwmPath();
+    auto enablePath = getPwmPath().string();
     enablePath.append("_enable");
 
     std::ofstream file;
