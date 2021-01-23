@@ -92,3 +92,14 @@ void ThermalZone::update() {
     tempCache = -1;
 }
 
+YAML::Node *ThermalZone::writeToYamlNode() {
+    auto node = new YAML::Node(YAML::NodeType::Map);
+    (*node)["name"] = name;
+    (*node)["path"] = path.string();
+
+    (*node)["idle"] = idle;
+    (*node)["desired"] = desired;
+    (*node)["critical"] = critical;
+    return node;
+}
+

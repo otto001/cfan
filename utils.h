@@ -21,12 +21,24 @@ int readIntFromFile(const std::string& path);
 std::string exec(const char* cmd);
 
 // trim from start (in place)
-inline void ltrim(std::string &s);
-// trim from end (in place)
-inline void rtrim(std::string &s);
-// trim from both ends (in place)
-inline void trim(std::string &s);
+inline void ltrim(std::string &s) {
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) {
+        return !std::isspace(ch);
+    }));
+}
 
+// trim from end (in place)
+inline void rtrim(std::string &s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) {
+        return !std::isspace(ch);
+    }).base(), s.end());
+}
+
+// trim from both ends (in place)
+inline void trim(std::string &s) {
+    ltrim(s);
+    rtrim(s);
+}
 
 inline double lerp(double a, double b, double alpha) {
     return a*(1-alpha) + b*alpha;
@@ -34,6 +46,18 @@ inline double lerp(double a, double b, double alpha) {
 
 bool isYes(const std::string string);
 
+template<typename T>
+std::string join(const T arr[], size_t n, std::string sep) {
+    std::string result;
+
+    for (int i = 0; i < n; ++i) {
+        result += std::to_string(arr[i]);
+        if (i < n-1) {
+            result += sep;
+        }
+    }
+    return result;
+}
 
 class LoadingException : public std::exception {
     std::string location;

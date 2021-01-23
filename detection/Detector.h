@@ -9,6 +9,7 @@
 
 class Control;
 class CoolingDevice;
+class ThermalZone;
 
 class Detector {
 public:
@@ -18,11 +19,13 @@ protected:
 public:
     void run();
     void detectThermal();
-    void detectThermalHwmon(std::filesystem::path path);
+    std::vector<ThermalZone *> getThermalZonesFromHwmon(const std::filesystem::path& hwmonPath);
 
     void detectCooling();
-    std::vector<CoolingDevice *> getCoolingDevicesFromHwmon(std::filesystem::path path);
-    void resetCoolingDevicesSpeed(const std::vector<CoolingDevice *> &devices, const double speed);
+    std::vector<CoolingDevice *> getCoolingDevicesFromHwmon(const std::filesystem::path& path);
+    static void resetCoolingDevicesSpeed(const std::vector<CoolingDevice *> &devices, const double speed);
+    static bool stopDevice(CoolingDevice* device);
+    static bool waitForDeviceToStabilize(CoolingDevice *device, int timeout=40);
 };
 
 

@@ -5,39 +5,69 @@
 #include <iostream>
 #include <filesystem>
 #include <unistd.h>
+#include <regex>
 
 #include "Detector.h"
 #include "../utils.h"
 #include "../CoolingDevice.h"
+#include "../Control.h"
+
 
 
 Detector::Detector(Control *control) : control(control) {
 
 }
 
-void Detector::detectThermalHwmon(std::filesystem::path path) {
-    auto name = readFile(path / "name");
-    std::cout << name << std::endl;
+std::vector<ThermalZone *> Detector::getThermalZonesFromHwmon(const std::filesystem::path& hwmonPath) {
+    auto hwmonName = readFile(hwmonPath / "name");
+    rtrim(hwmonName);
+    static const std::regex re("temp\\d+_input");
 
-    for (const auto &entry : std::filesystem::directory_iterator(path)) {
-        if (entry.path().filename().string().rfind("temp", 0) == 0 && entry.is_regular_file()) {
-            std::cout << entry.path().string() << std::endl;
+    std::vector<ThermalZone *> zones;
+
+    for (const auto &entry : std::filesystem::directory_iterator(hwmonPath)) {
+        auto filename = entry.path().filename().string();
+        if (std::regex_match(filename, re) && entry.is_regular_file()) {
+
+            auto baseName = filename.substr(0, filename.size() - 6);
+
+            auto zoneLabel = readFile(hwmonPath / (baseName + "_label"));
+            rtrim(zoneLabel);
+
+            auto zone = new ThermalZone();
+            zone->path = hwmonPath / baseName;
+            zone->name = hwmonName;
+            zone->name += "_";
+            zone->name += zoneLabel;
+
+            auto temp = zone->_getTemp();
+            if (temp > 0 && temp <= 120) {
+                zones.push_back(zone);
+            } else {
+                delete zone;
+            }
         }
-
     }
+    return zones;
 }
 
 
 void Detector::detectThermal() {
     std::string path = "/sys/class/hwmon";
+
+    std::vector<ThermalZone *> zones;
+
     for (const auto &entry : std::filesystem::directory_iterator(path)) {
         if (entry.is_directory()) {
-            detectThermalHwmon(entry.path());
+            auto hwmonZones = getThermalZonesFromHwmon(entry.path());
+            zones.insert(zones.end(), hwmonZones.begin(), hwmonZones.end());
         }
     }
+    control->thermalZones = zones;
 }
 
 void Detector::run() {
+    detectThermal();
     detectCooling();
 }
 
@@ -59,6 +89,8 @@ void Detector::detectCooling() {
     auto it = devices.begin();
     while (it != devices.end()) {
         auto ignoreDevice = [=, &devices, &it]() {
+            (*it)->setToQFanControl();
+            delete *it;
             it = devices.erase(it);
         };
 
@@ -67,11 +99,14 @@ void Detector::detectCooling() {
         usleep(SEC_TO_MICROSEC(2));
         std::cout << "Ramping up device " << device->getPath() << " ..." << std::endl;
         device->setSpeed(1, true);
-        usleep(SEC_TO_MICROSEC(2));
+
+        for (int i = 0; i < 4 && device->readRpm() == 0; ++i) {
+            usleep(SEC_TO_MICROSEC(0.5));
+        }
 
         if (device->readRpm() == 0) {
             ignoreDevice();
-            std::cout << "Ignoring device, since rpm appears to be zero."  << std::endl;
+            std::cout << "Ignoring device, since rpm appears to be zero." << std::endl;
             continue;
         }
 
@@ -80,7 +115,7 @@ void Detector::detectCooling() {
         std::getline(std::cin, name);
         if (name.empty() || name == "\n") {
             ignoreDevice();
-            std::cout << "Ignoring device."  << std::endl;
+            std::cout << "Ignoring device." << std::endl;
             continue;
         }
 
@@ -90,38 +125,23 @@ void Detector::detectCooling() {
         ++it;
     }
 
-    std::cout << "All devices have been named. Checking fan behaviour..."  << std::endl;
+    std::cout << "All devices have been named. Checking fan behaviour..." << std::endl;
 
+    for (auto device : devices) {
+        device->setToQFanControl();
+    }
 
-    resetCoolingDevicesSpeed(devices, 0.5);
     usleep(SEC_TO_MICROSEC(2));
 
     for (auto device : devices) {
+        std::cout << std::endl << "Checking device " << device->getName() << std::endl;
+
+        device->setToManual();
         device->setSpeed(0, true);
 
-        auto stopDevice = [=, &device]() {
-            device->setSpeed(0, true);
-
-            std::cout << "Stopping device " << device->getName() << ": ";
-
-            for (int counter = 0; counter < 20 && device->readRpm() > 0; ++counter) {
-                usleep(SEC_TO_MICROSEC(0.5));
-                std::cout << "#";
-                fflush(stdout);
-            }
-            if (device->readRpm() == 0) {
-                for (int counter = 0; counter < 10; ++counter) {
-                    usleep(SEC_TO_MICROSEC(0.5));
-                    std::cout << "#";
-                    fflush(stdout);
-                }
-                std::cout << " OK" << std::endl;
-            }
-        };
-
-        stopDevice();
-        if (device->readRpm() > 0) {
-            std::cout << std::endl << "Device won't stop. Is this device a pump? [yes/NO]> ";
+        bool deviceStopped = stopDevice(device);
+        if (!deviceStopped) {
+            std::cout << "Device won't stop. Is this device a pump? [yes/NO]> ";
             std::string isPumpAnswer;
             std::getline(std::cin, isPumpAnswer);
             device->setIsPump(isYes(isPumpAnswer));
@@ -133,38 +153,39 @@ void Detector::detectCooling() {
         }
 
         std::cout << "Checking start speed: ";
-        usleep(SEC_TO_MICROSEC(2));
 
         // startup speed
-        for (int step = 1; step <= 40; ++step) {
+        for (int step = 0; step <= 40; ++step) {
             std::cout << "#";
             fflush(stdout);
-            device->setSpeed(step/100.0, true);
-            usleep(SEC_TO_MICROSEC(1.5));
+            device->setSpeed(step / 100.0, true);
+            usleep(SEC_TO_MICROSEC(2));
             if (device->readRpm() > 0) {
-                device->startSpeed = device->getCurrentSetSpeed();
+                device->minSpeed = device->startSpeed = device->getCurrentSetSpeed();
                 std::cout << " OK" << std::endl;
-                std::cout << "Start speed for device is " << round(100*device->startSpeed) << "%" << std::endl;
+                std::cout << "Start speed for device is " << round(100 * device->startSpeed) << "%" << std::endl;
                 break;
             }
         }
 
-        stopDevice();
+        if (!device->getIsPump()) {
+            stopDevice(device);
+        }
 
         std::cout << "Measuring rpm curve: ";
 
         // rpm curve
-        device->rpmCurve[0] = 0;
-        std::cout << "0 - ";
+        device->rpmCurve[0] = device->readRpm();
+        std::cout << device->readRpm() << " - ";
+        fflush(stdout);
 
         for (int step = 1; step <= 10; ++step) {
 
-            device->setSpeed(step/10.0, true);
-            usleep(SEC_TO_MICROSEC(2));
-            int rmp = device->readRpm();
-            device->rpmCurve[step+1] = rmp;
-
-            std::cout << rmp;
+            device->setSpeed(step / 10.0, true);
+            waitForDeviceToStabilize(device);
+            int rpm = device->readRpm();
+            device->rpmCurve[step] = rpm;
+            std::cout << rpm;
             if (step < 10) {
                 std::cout << " - ";
             }
@@ -172,7 +193,7 @@ void Detector::detectCooling() {
         }
         std::cout << " OK" << std::endl;
 
-        device->setSpeed(0.5, true);
+        device->setToQFanControl();
 
     }
 
@@ -183,19 +204,16 @@ void Detector::detectCooling() {
     }
 
     std::cout << "Reset all fans to QFan control" << std::endl;
-
+    control->coolingDevices = devices;
 }
 
-std::vector<CoolingDevice *> Detector::getCoolingDevicesFromHwmon(std::filesystem::path path) {
-    auto name = readFile(path / "name");
-    std::cout << name << std::endl;
+std::vector<CoolingDevice *> Detector::getCoolingDevicesFromHwmon(const std::filesystem::path &path) {
+    static const std::regex re("pwm\\d+");
 
     std::vector<CoolingDevice *> devices;
-
     for (const auto &entry : std::filesystem::directory_iterator(path)) {
         auto filename = entry.path().filename().string();
-        if (filename.size() == 4 && filename.rfind("pwm", 0) == 0 && entry.is_regular_file()) {
-            //detectCoolingDevice(entry.path());
+        if (std::regex_match(filename, re) && entry.is_regular_file()) {
             auto device = new CoolingDevice(control);
             device->setPath(entry.path());
             devices.push_back(device);
@@ -210,6 +228,58 @@ void Detector::resetCoolingDevicesSpeed(const std::vector<CoolingDevice *> &devi
         device->setToManual();
         device->setSpeed(speed, true);
     }
+}
+
+bool Detector::stopDevice(CoolingDevice *device) {
+    device->setSpeed(0, true);
+
+    std::cout << "Stopping device " << device->getName() << ": ";
+
+    for (int counter = 0; counter < 20 && device->readRpm() > 0; ++counter) {
+        usleep(SEC_TO_MICROSEC(0.5));
+        std::cout << "#";
+        fflush(stdout);
+    }
+    if (device->readRpm() == 0) {
+        for (int counter = 0; counter < 10; ++counter) {
+            usleep(SEC_TO_MICROSEC(0.5));
+            std::cout << "#";
+            fflush(stdout);
+        }
+        std::cout << " OK" << std::endl;
+        return true;
+    }
+    std::cout << " FAILED" << std::endl;
+    return false;
+}
+
+bool Detector::waitForDeviceToStabilize(CoolingDevice *device, int timeout) {
+
+    constexpr int bufSize = 6;
+    int buf[bufSize];
+    for (int counter = 0; counter < timeout ; ++counter) {
+        usleep(SEC_TO_MICROSEC(0.5));
+        int currRpm = device->readRpm();
+        buf[counter%bufSize] = currRpm;
+
+        if (counter >= bufSize) {
+            int max = buf[0];
+            int min = buf[0];
+            for(int i=1; i<bufSize; i++) {
+                if(buf[i] > max) {
+                    max = buf[i];
+                }
+                if(buf[i] < min) {
+                    min = buf[i];
+                }
+            }
+
+            if (min*1.1 >= max) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 

@@ -12,38 +12,80 @@
 
 
 bool Control::load() {
-    YAML::Node config;
     try {
+        YAML::Node config;
         config = YAML::LoadFile(configPath);
-    } catch (YAML::BadFile) {
+
+        auto thermalConfig = config["thermal"];
+        auto thermalZonesConfig = thermalConfig["zones"].as<std::vector<YAML::Node>>();
+
+        for (auto &zoneConfig : thermalZonesConfig) {
+            auto zone = ThermalZone::loadZone(zoneConfig);
+            if (zone) {
+                thermalZones.push_back(zone);
+            } else {
+                std::cerr << "Could not load thermal zone '"
+                          << readYamlField<std::string>(zoneConfig, "name", "no name readable")
+                          << "'" << std::endl;
+            }
+        }
+
+
+        auto coolingConfig = config["cooling"];
+        auto coolingDevicesConfig = coolingConfig["devices"].as<std::vector<YAML::Node>>();
+
+        for (auto &deviceConfig : coolingDevicesConfig) {
+            auto device = CoolingDevice::loadDevice(deviceConfig, this);
+            if (device) {
+                coolingDevices.push_back(device);
+            } else {
+                std::cerr << "Could not load cooling device '"
+                          << readYamlField<std::string>(deviceConfig, "name", "no name readable")
+                          << "'" << std::endl;
+            }
+        }
+
+        return true;
+    } catch (YAML::BadFile &) {
+        return false;
+    } catch (LoadingException &) {
+        return false;
+    } catch (YAML::Exception &) {
         return false;
     }
 
-    auto thermalConfig = config["thermal"];
-    auto thermalZonesConfig = thermalConfig["zones"].as<std::vector<YAML::Node>>();
-
-    for (auto &zoneConfig : thermalZonesConfig) {
-        auto zone = ThermalZone::loadZone(zoneConfig);
-        if (zone) {
-            thermalZones.push_back(zone);
-        } else {
-            std::cerr << "Could not load thermal zone '" << readYamlField<std::string>(zoneConfig, "name", "no name provided") << "'" << std::endl;
-        }
-    }
-
-
-    auto coolingConfig = config["cooling"];
-    auto coolingDevicesConfig = coolingConfig["devices"].as<std::vector<YAML::Node>>();
-
-    for (auto &deviceConfig : coolingDevicesConfig) {
-        auto device = CoolingDevice::loadDevice(deviceConfig, this);
-        if (device) {
-            coolingDevices.push_back(device);
-        }
-    }
-
-    return true;
 }
+
+
+bool Control::save() {
+    YAML::Node config(YAML::NodeType::Map);
+
+    YAML::Node coolingNodes(YAML::NodeType::Sequence);
+    for (auto device : coolingDevices) {
+        auto node = device->writeToYamlNode();
+        coolingNodes.push_back(*node);
+    }
+    config["cooling"]["devices"] = coolingNodes;
+
+    YAML::Node thermalNodes(YAML::NodeType::Sequence);
+    for (auto zone : thermalZones) {
+        auto node = zone->writeToYamlNode();
+        thermalNodes.push_back(*node);
+    }
+    config["thermal"]["zones"] = thermalNodes;
+
+    std::ofstream file;
+    file.open(configPath, std::ios::out | std::ios::trunc);
+
+    if (file.is_open()) {
+        file << config;
+        file.close();
+        std::cout << "Saved config to " << configPath;
+        return true;
+    }
+    return false;
+}
+
 
 void Control::init() {
     for (auto device : coolingDevices) {
@@ -59,6 +101,7 @@ void Control::init() {
         auto t1 = std::chrono::high_resolution_clock::now();
         update();
         auto t2 = std::chrono::high_resolution_clock::now();
+
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
         long sleepDuration = interval - duration;
 
@@ -76,6 +119,7 @@ void Control::init() {
         update();
         writeToStdout();
         auto t2 = std::chrono::high_resolution_clock::now();
+
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
         long sleepDuration = interval - duration;
 
@@ -89,6 +133,7 @@ void Control::init() {
 void Control::detect() {
     Detector detector = Detector(this);
     detector.run();
+    save();
 }
 
 void Control::update() {
@@ -101,7 +146,7 @@ void Control::update() {
     }
 }
 
-ThermalZone *Control::getThermalZone(const std::string& name) {
+ThermalZone *Control::getThermalZone(const std::string &name) {
     for (auto zone : thermalZones) {
         if (zone->getName() == name) {
             return zone;

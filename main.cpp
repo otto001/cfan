@@ -16,6 +16,8 @@ int main(int argc, char* argv[]) {
         } else if (argv[1] == std::string("--detect")) {
             control.detect();
             return 0;
+        } else if (argv[1] == std::string("--debug")) {
+            control.debug = true;
         }
     }
     control.run();

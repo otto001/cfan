@@ -58,10 +58,11 @@ bool CoolingDevice::setSpeed(double speed, bool force) {
     speed = std::min(std::max(speed, 0.0), 1.0);
     auto speedInt = (int) round(speed * 255);
 
-    auto minSpeedInt = (int) round(minSpeed * 255);
-    auto startSpeedInt = (int) round(startSpeed * 255);
 
     if (!isPump && !force) {
+        auto minSpeedInt = (int) round(minSpeed * 255);
+        auto startSpeedInt = (int) round(startSpeed * 255);
+
         if (speedInt > 0 && speedInt < minSpeedInt) {
             speed = minSpeed;
             speedInt = minSpeedInt;
@@ -69,7 +70,6 @@ bool CoolingDevice::setSpeed(double speed, bool force) {
         if (speedInt >= minSpeedInt && speedInt < startSpeedInt && readRpm() == 0) {
             speed = startSpeed;
             speedInt = startSpeedInt;
-            std::cout << "start help: " << name << std::endl;
         }
     }
 
@@ -135,11 +135,13 @@ bool CoolingDevice::load(YAML::Node node) {
     name = readYamlField<std::string>(node, "name");
 
 
-    lazinessStart = readYamlField<double>(node, "laziness-start", 0.6);
-    lazinessStop = readYamlField<double>(node, "laziness-stop", 0.6);
+    lazinessStart = readYamlField<double>(node, "laziness-start", 60);
+    lazinessStop = readYamlField<double>(node, "laziness-stop", 60);
+    lazinessStart /= 100.0;
+    lazinessStop /= 100.0;
 
     linearity = readYamlField<double>(node, "linearity", 0.0);
-
+    linearity /= 100.0;
 
     startSpeed = readYamlField<double>(node, "start-speed", 0.0);
     minSpeed = readYamlField<double>(node, "min-speed", startSpeed);
@@ -183,6 +185,32 @@ bool CoolingDevice::load(YAML::Node node) {
     return true;
 }
 
+
+YAML::Node *CoolingDevice::writeToYamlNode() {
+    auto node = new YAML::Node(YAML::NodeType::Map);
+    (*node)["name"] = name;
+    (*node)["path"] = path.string();
+
+    (*node)["is-pump"] = isPump;
+
+
+    (*node)["start-speed"] = round(startSpeed*100);
+    (*node)["min-speed"] = round(minSpeed*100);
+
+    (*node)["linearity"] = round(linearity*100);
+
+    (*node)["laziness-start"] =  round(lazinessStart*100);
+    (*node)["laziness-stop"] = round(lazinessStop*100);
+
+    (*node)["rpm-curve"] = join(rpmCurve, 11, "-");
+
+    (*node)["thermal-zones"] = YAML::Node(YAML::NodeType::Sequence);
+    for (auto zone : thermalZones) {
+        (*node)["thermal-zones"].push_back(zone->getName());
+    }
+    return node;
+}
+
 bool CoolingDevice::init() {
     setToManual();
     return true;
@@ -191,24 +219,34 @@ bool CoolingDevice::init() {
 void CoolingDevice::update() {
     checkIsResponsive();
 
-    auto hottestZone = getHottestZone();
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-result"
+    getHottestZone();
+#pragma clang diagnostic pop
+
     double deltaSeconds = double(control->getInterval()) / 1000.0;
 
 
     if (currentHighScore < 1) {
+        // under idle
         buildUp -= buildUp*0.25*deltaSeconds;
     } else if (currentHighScore < 2) {
+        // over idle under desired
         double target = (1 + currentHighScore - 1) * (buildUpThreshold / 10);
         buildUp += (target - buildUp) * 0.15*deltaSeconds;
     } else if (currentHighScore < 3) {
+        // over desired under critical
         double target = (1 + currentHighScore - 2) * buildUpThreshold;
         buildUp += std::max((target - buildUp) * 0.5, 0.0)*deltaSeconds;
     } else {
+        // critical
         buildUp = buildUpThreshold * 3;
     }
 
+    buildUp = std::max(0.0, buildUp);
+
     bool started = currentSetSpeed != 0;
-    if (!started && buildUp > buildUpThreshold * lerp(1.0, 1.5, lazinessStart)) {
+    if (!started && (buildUp > buildUpThreshold * lerp(1.0, 1.5, lazinessStart)) || lazinessStart == 0) {
         started = true;
     } else if (started && buildUp < buildUpThreshold * lerp(1.0, 0, lazinessStop)) {
         started = false;
@@ -230,6 +268,12 @@ void CoolingDevice::update() {
     }
 
     setSpeed(targetSpeed);
+    if (control->debug) {
+        std::cout << name
+        << ":\n\tscore: " << currentHighScore
+        << "\n\tspeed: " << targetSpeed
+        << "\n\trpm: " << readRpm() << std::endl;
+    }
 }
 
 CoolingDevice *CoolingDevice::loadDevice(YAML::Node &node, Control *control) {
@@ -250,21 +294,31 @@ double CoolingDevice::getSpeedFromCurve(double x) {
 
 bool CoolingDevice::checkIsResponsive() {
     double diff;
-    double actualPwmSpeed = calculateActualPwmSpeed();
+    int currentRpm = readRpm();
 
-    if (currentSetSpeed == 0 && isPump && actualPwmSpeed < startSpeed) {
+    int currentSpeedBracket = round(currentSetSpeed*10);  // speed as int between 0 and 10
+    int supposedRpmLowerBound = rpmCurve[currentSpeedBracket];
+    int supposedRpmUpperBound = rpmCurve[currentSpeedBracket+1];
+    int supposedRpm = lerp(supposedRpmLowerBound, supposedRpmUpperBound, currentSetSpeed*10-currentSpeedBracket);
+
+
+    //double actualPwmSpeed = calculateActualPwmSpeed();
+
+    if (currentSetSpeedInt == 0 && isPump) {
         diff = 0;
     } else {
-        diff = std::abs(actualPwmSpeed - currentSetSpeed);
+        diff = std::abs(currentRpm - supposedRpm);
     }
 
 
-    if (diff > 0.03) {
+    if (diff > supposedRpm*0.05) {
         unresponsiveCounter++;
 
         if (unresponsiveCounter > 8) {
             unresponsiveCounter = 0;
-            std::cout << name << " unresponsive. Setting to manual mode..." << std::endl;
+            if (control->debug) {
+                std::cout << name << " is deviating from speed curve. Setting pwm_mode to manual (1)..." << std::endl;
+            }
             setToManual();
             return false;
         }
