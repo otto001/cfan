@@ -10,8 +10,9 @@
 #include "CoolingDevice.h"
 
 class Control {
-private:
 public:
+    friend class Detector;
+
     [[nodiscard]] const std::vector<ThermalZone *> &getThermalZones() const;
 
     [[nodiscard]] const std::vector<CoolingDevice *> &getCoolingDevices() const;
@@ -34,6 +35,7 @@ public:
 
 public:
     bool load();
+    bool save();
 
     void init();
     [[noreturn]] void run();
@@ -41,6 +43,8 @@ public:
     void detect();
 
     ThermalZone* getThermalZone(const std::string& name);
+
+    bool debug = false;
 
 };
 

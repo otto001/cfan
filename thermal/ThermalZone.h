@@ -11,7 +11,7 @@
 
 
 class ThermalZone {
-
+    friend class Detector;
 
 protected:
     std::filesystem::path path;
@@ -29,10 +29,11 @@ protected:
 
     virtual int _getTemp();
     virtual int _getLoad();
-
     virtual bool load(YAML::Node node);
 
 public:
+    virtual YAML::Node* writeToYamlNode();
+
     virtual void update();
 
     virtual int getTemp() final;

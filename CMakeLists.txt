@@ -11,3 +11,8 @@ find_package(Curses REQUIRED)
 target_link_libraries(cfan libyaml-cpp.a)
 target_link_libraries(cfan ${CURSES_LIBRARIES})
 target_link_libraries(cfan stdc++fs)
+
+install(TARGETS cfan DESTINATION /usr/local/bin/)
+install(FILES cfan.service DESTINATION /etc/systemd/system/)
+install(CODE "execute_process(COMMAND /bin/sh enable-service.sh
+            WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})")

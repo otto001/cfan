@@ -15,7 +15,7 @@ const std::string &ThermalZone::getName() const {
 int ThermalZone::_getTemp() {
     std::string inputPath = path;
     inputPath.append("_input");
-    int result = readIntFromFile(path);
+    int result = readIntFromFile(inputPath);
     if (result == -1) {
         return -1;
     }
@@ -90,5 +90,16 @@ ThermalZone *ThermalZone::loadZone(YAML::Node& node) {
 void ThermalZone::update() {
     loadCache = -1;
     tempCache = -1;
+}
+
+YAML::Node *ThermalZone::writeToYamlNode() {
+    auto node = new YAML::Node(YAML::NodeType::Map);
+    (*node)["name"] = name;
+    (*node)["path"] = path.string();
+
+    (*node)["idle"] = idle;
+    (*node)["desired"] = desired;
+    (*node)["critical"] = critical;
+    return node;
 }
 

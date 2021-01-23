@@ -94,6 +94,8 @@ public:
 
 
     virtual bool load(YAML::Node node);
+    virtual YAML::Node* writeToYamlNode();
+
 
     virtual double getSpeedFromCurve(double x);
     virtual bool checkIsResponsive();
