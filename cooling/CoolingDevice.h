@@ -7,7 +7,7 @@
 
 #include <string>
 #include <filesystem>
-#include "thermal/ThermalZone.h"
+#include "../thermal/ThermalZone.h"
 
 class Control;
 

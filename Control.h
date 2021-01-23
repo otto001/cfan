@@ -7,7 +7,7 @@
 
 #include <vector>
 #include "thermal/ThermalZone.h"
-#include "CoolingDevice.h"
+#include "cooling/CoolingDevice.h"
 
 class Control {
 public:

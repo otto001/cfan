@@ -3,12 +3,12 @@
 //
 
 #include "CoolingDevice.h"
-#include "Control.h"
+#include "../Control.h"
 #include <iostream>
 #include <cmath>
 #include <algorithm>
 #include <string>
-#include "utils.h"
+#include "../utils.h"
 
 
 CoolingDevice::CoolingDevice(Control *control) : control(control) {

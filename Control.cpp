@@ -3,7 +3,7 @@
 //
 
 #include "Control.h"
-#include "Table.h"
+//#include "Table.h"
 #include "utils.h"
 #include "system-utils.h"
 #include "detection/Detector.h"
@@ -156,8 +156,8 @@ ThermalZone *Control::getThermalZone(const std::string &name) {
 }
 
 void Control::writeToStdout() {
-    static Table coolingTable(this);
-    coolingTable.refreshTable();
+    // static Table coolingTable(this);
+    // coolingTable.refreshTable();
 }
 
 const std::vector<ThermalZone *> &Control::getThermalZones() const {

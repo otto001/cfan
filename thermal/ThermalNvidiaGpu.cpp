@@ -4,6 +4,7 @@
 
 #include "ThermalNvidiaGpu.h"
 #include "../utils.h"
+#include "../system-utils.h"
 
 int ThermalNvidiaGpu::_getLoad() {
     readSmi();
@@ -16,7 +17,7 @@ int ThermalNvidiaGpu::_getTemp() {
 }
 
 void ThermalNvidiaGpu::readSmi() {
-    std::string result = exec("nvidia-smi --query-gpu=temperature.gpu,utilization.gpu --format=csv,noheader");
+    std::string result = System::exec("nvidia-smi --query-gpu=temperature.gpu,utilization.gpu --format=csv,noheader");
 
     auto firstLineSplit = result.find_first_of(", ");
     auto firstLineEnd = result.find_first_of('\n');

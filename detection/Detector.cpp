@@ -4,12 +4,12 @@
 #include <string>
 #include <iostream>
 #include <filesystem>
-#include <unistd.h>
 #include <regex>
 
 #include "Detector.h"
 #include "../utils.h"
-#include "../CoolingDevice.h"
+#include "../system-utils.h"
+#include "../cooling/CoolingDevice.h"
 #include "../Control.h"
 
 
@@ -19,7 +19,7 @@ Detector::Detector(Control *control) : control(control) {
 }
 
 std::vector<ThermalZone *> Detector::getThermalZonesFromHwmon(const std::filesystem::path& hwmonPath) {
-    auto hwmonName = readFile(hwmonPath / "name");
+    auto hwmonName = readFile((hwmonPath / "name").string());
     rtrim(hwmonName);
     static const std::regex re("temp\\d+_input");
 
@@ -31,7 +31,7 @@ std::vector<ThermalZone *> Detector::getThermalZonesFromHwmon(const std::filesys
 
             auto baseName = filename.substr(0, filename.size() - 6);
 
-            auto zoneLabel = readFile(hwmonPath / (baseName + "_label"));
+            auto zoneLabel = readFile((hwmonPath / (baseName + "_label")).string());
             rtrim(zoneLabel);
 
             auto zone = new ThermalZone();
@@ -83,7 +83,7 @@ void Detector::detectCooling() {
     }
 
     resetCoolingDevicesSpeed(devices, 0.5);
-    usleep(SEC_TO_MICROSEC(3));
+    System::sleep(3000);
 
 
     auto it = devices.begin();
@@ -96,12 +96,12 @@ void Detector::detectCooling() {
 
         auto device = *it;
         resetCoolingDevicesSpeed(devices, 0);
-        usleep(SEC_TO_MICROSEC(2));
+        System::sleep(2000);
         std::cout << "Ramping up device " << device->getPath() << " ..." << std::endl;
         device->setSpeed(1, true);
 
         for (int i = 0; i < 4 && device->readRpm() == 0; ++i) {
-            usleep(SEC_TO_MICROSEC(0.5));
+            System::sleep(500);
         }
 
         if (device->readRpm() == 0) {
@@ -131,7 +131,7 @@ void Detector::detectCooling() {
         device->setToQFanControl();
     }
 
-    usleep(SEC_TO_MICROSEC(2));
+    System::sleep(2000);
 
     for (auto device : devices) {
         std::cout << std::endl << "Checking device " << device->getName() << std::endl;
@@ -159,7 +159,7 @@ void Detector::detectCooling() {
             std::cout << "#";
             fflush(stdout);
             device->setSpeed(step / 100.0, true);
-            usleep(SEC_TO_MICROSEC(2));
+            System::sleep(2000);
             if (device->readRpm() > 0) {
                 device->minSpeed = device->startSpeed = device->getCurrentSetSpeed();
                 std::cout << " OK" << std::endl;
@@ -198,7 +198,7 @@ void Detector::detectCooling() {
     }
 
     resetCoolingDevicesSpeed(devices, 0.5);
-    usleep(SEC_TO_MICROSEC(3));
+    System::sleep(3000);
     for (auto device : devices) {
         device->setToQFanControl();
     }
@@ -236,13 +236,13 @@ bool Detector::stopDevice(CoolingDevice *device) {
     std::cout << "Stopping device " << device->getName() << ": ";
 
     for (int counter = 0; counter < 20 && device->readRpm() > 0; ++counter) {
-        usleep(SEC_TO_MICROSEC(0.5));
+        System::sleep(500);
         std::cout << "#";
         fflush(stdout);
     }
     if (device->readRpm() == 0) {
         for (int counter = 0; counter < 10; ++counter) {
-            usleep(SEC_TO_MICROSEC(0.5));
+            System::sleep(500);
             std::cout << "#";
             fflush(stdout);
         }
@@ -258,7 +258,7 @@ bool Detector::waitForDeviceToStabilize(CoolingDevice *device, int timeout) {
     constexpr int bufSize = 6;
     int buf[bufSize];
     for (int counter = 0; counter < timeout ; ++counter) {
-        usleep(SEC_TO_MICROSEC(0.5));
+        System::sleep(500);
         int currRpm = device->readRpm();
         buf[counter%bufSize] = currRpm;
 

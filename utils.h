@@ -18,7 +18,6 @@ std::string readFile(const std::string& path);
 int parseInt(const std::string& value);
 int readIntFromFile(const std::string& path);
 
-std::string exec(const char* cmd);
 
 // trim from start (in place)
 inline void ltrim(std::string &s) {
