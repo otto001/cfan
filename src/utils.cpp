@@ -42,8 +42,7 @@ int readIntFromFile(const std::string& path) {
 
 bool isYes(const std::string string) {
     std::string lowercase = string;
-    std::transform(lowercase.begin(), lowercase.end(), lowercase.begin(),
-                   [](unsigned char c){ return asciiToLower(c); });
+    toLower(lowercase);
     return lowercase == "yes" || lowercase == "y" || lowercase == "1" || lowercase == "t" || lowercase == "true";
 }
 

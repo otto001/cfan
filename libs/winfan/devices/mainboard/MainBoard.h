@@ -1,7 +1,7 @@
 #pragma once
-#include "Device.h"
-#include "../lpcIo/LpcIo.h"
-#include "../SuperIo/SuperIo.h"
+#include "../Device.h"
+#include "../../lpcIo/LpcIo.h"
+#include "superIo/SuperIo.h"
 
 
 class MainBoard : public Device

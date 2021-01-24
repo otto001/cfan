@@ -19,6 +19,9 @@ Detector::Detector(Control *control) : control(control) {
 }
 
 std::vector<ThermalZone *> Detector::getThermalZonesFromHwmon(const std::filesystem::path& hwmonPath) {
+#if WIN32
+    return {};
+#else
     auto hwmonName = readFile((hwmonPath / "name").string());
     rtrim(hwmonName);
     static const std::regex re("temp\\d+_input");
@@ -49,6 +52,7 @@ std::vector<ThermalZone *> Detector::getThermalZonesFromHwmon(const std::filesys
         }
     }
     return zones;
+#endif
 }
 
 

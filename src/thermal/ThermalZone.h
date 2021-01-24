@@ -14,7 +14,10 @@ class ThermalZone {
     friend class Detector;
 
 protected:
+#if WIN32
+#else
     std::filesystem::path path;
+#endif
     std::string name;
 public:
     const std::string &getName() const;

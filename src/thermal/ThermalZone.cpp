@@ -13,6 +13,9 @@ const std::string &ThermalZone::getName() const {
 }
 
 int ThermalZone::_getTemp() {
+#if WIN32
+    return 100;
+#else
     auto inputPath = path.string();
     inputPath.append("_input");
     int result = readIntFromFile(inputPath);
@@ -20,6 +23,7 @@ int ThermalZone::_getTemp() {
         return -1;
     }
     return result/1000;
+#endif
 }
 
 int ThermalZone::_getLoad() {
@@ -57,7 +61,7 @@ bool ThermalZone::load(YAML::Node node) {
     desired = readYamlField<int>(node, "desired", 60);
     critical = readYamlField<int>(node, "critical", 80);
 
-    path = readYamlField<std::string>(node, "path", "");
+    //path = readYamlField<std::string>(node, "path", "");
 
     name = readYamlField<std::string>(node, "name");
 
@@ -65,20 +69,18 @@ bool ThermalZone::load(YAML::Node node) {
 }
 
 ThermalZone *ThermalZone::loadZone(YAML::Node& node) {
-    auto className = readYamlField<std::string>(node, "class", "ThermalZone");
-
-    if (className.size() < 7 || className.substr(0, 7) != "Thermal") {
-        className = "Thermal" + className;
-    }
+    auto type = readYamlField<std::string>(node, "type", "probe");
+    toLower(type);
     ThermalZone *zone = nullptr;
 
-    if (className == "ThermalZone") {
+    if (type == "probe") {
         zone = new ThermalZone();
-    } else if (className == "ThermalCpu") {
+    } else if (type == "cpu") {
         zone = new ThermalCpu();
-    } else if (className == "ThermalNvidiaGpu") {
-        zone = new ThermalNvidiaGpu();
     }
+//    } else if (className == "ThermalNvidiaGpu") {
+//        zone = new ThermalNvidiaGpu();
+//    }
 
     if (zone) {
         zone->load(node);
@@ -95,7 +97,7 @@ void ThermalZone::update() {
 YAML::Node *ThermalZone::writeToYamlNode() {
     auto node = new YAML::Node(YAML::NodeType::Map);
     (*node)["name"] = name;
-    (*node)["path"] = path.string();
+    //(*node)["path"] = path.string();
 
     (*node)["idle"] = idle;
     (*node)["desired"] = desired;

@@ -163,8 +163,8 @@ private:
     void restoreDefaultFanControl(int index);
     void disableIOSpaceLock();
 public:
-
-    void setControl(int index, uint8_t* value) override;
+    void setFanControlMode(int index, uint8_t value) override;
+    void setFanSpeed(int index, uint8_t value) override;
     void update() override;
     
 

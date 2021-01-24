@@ -19,28 +19,10 @@ CoolingDevice::CoolingDevice(Control *control) : control(control) {
 
 }
 
-
 bool CoolingDevice::init() {
     setToManual();
     return true;
 }
-
-//int CoolingDevice::getIndex() const {
-//
-//    std::string fileName = path.filename().string();
-//    size_t last_index = fileName.find_last_not_of("0123456789");
-//    std::string digits = fileName.substr(last_index + 1);
-//    int result = -1;
-//    try {
-//        result = (int) std::stoi(digits);
-//    } catch (std::invalid_argument &e) {
-//        result = -1;
-//    } catch (std::out_of_range &e) {
-//        result = -1;
-//    }
-//
-//    return result;
-//}
 
 bool CoolingDevice::setSpeed(double speed, bool force) {
     speed = std::min(std::max(speed, 0.0), 1.0);
@@ -60,12 +42,20 @@ bool CoolingDevice::setSpeed(double speed, bool force) {
             speedInt = startSpeedInt;
         }
     }
+    if (!force) {
+        auto maxSpeedInt = (int) round(maxSpeed * 255);
+        if (speedInt > maxSpeedInt) {
+            speedInt = maxSpeedInt;
+            speed = maxSpeed;
+        }
+    }
 
     if (!force && currentSetSpeedInt == speedInt) {
         return true;
     }
+    bool success;
 #if WIN32
-    return false;
+    success = WinFan::setFanSpeed(index, speedInt);
 #else
     std::ofstream file;
     file.open(path, std::ios::out | std::ios::trunc);
@@ -74,19 +64,20 @@ bool CoolingDevice::setSpeed(double speed, bool force) {
 
         file << speedInt;
         file.close();
+        success = true;
+    }
+#endif
+    if (success) {
         currentSetSpeedInt = speedInt;
         currentSetSpeed = speed;
-        return true;
+    } else {
+        std::cerr << "Failed to set speed of cooling device " << name << "!" << std::endl;
     }
-    std::cerr << "Failed to set speed of cooling device " << name << "!" << std::endl;
-
-    return false;
-#endif
 }
 
 bool CoolingDevice::setToManual() {
 #if WIN32
-    return false;
+    return WinFan::setFanControlMode(index, 1);
 #else
     std::string enablePath = getPwmPath().string();
     enablePath.append("_enable");
@@ -107,7 +98,7 @@ bool CoolingDevice::setToManual() {
 
 }
 
-int CoolingDevice::readRpm() {
+int CoolingDevice::readRpm() const {
 #if WIN32
     int32_t result;
     WinFan::readFanRpm(index, &result);
@@ -118,9 +109,9 @@ int CoolingDevice::readRpm() {
 #endif
 }
 
-bool CoolingDevice::setToQFanControl() {
+bool CoolingDevice::setToSmartFanIVFanControl() {
 #if WIN32
-    return false;
+    return WinFan::setFanControlMode(index, 5);
 #else
     auto enablePath = getPwmPath().string();
     enablePath.append("_enable");
@@ -170,9 +161,11 @@ bool CoolingDevice::load(YAML::Node node) {
 
     startSpeed = readYamlField<double>(node, "start-speed", 0.0);
     minSpeed = readYamlField<double>(node, "min-speed", startSpeed);
+    maxSpeed = readYamlField<double>(node, "max-speed", 100.0);
 
     startSpeed /= 100.0;
     minSpeed /= 100.0;
+    maxSpeed /= 100.0;
 
     isPump = readYamlField<bool>(node, "is-pump", false);
 
@@ -221,6 +214,7 @@ YAML::Node *CoolingDevice::writeToYamlNode() {
 
     (*node)["start-speed"] = round(startSpeed*100);
     (*node)["min-speed"] = round(minSpeed*100);
+    (*node)["max-speed"] = round(maxSpeed*100);
 
     (*node)["linearity"] = round(linearity*100);
 
@@ -267,7 +261,7 @@ void CoolingDevice::update() {
     buildUp = std::max(0.0, buildUp);
 
     bool started = currentSetSpeed != 0;
-    if (!started && (buildUp > buildUpThreshold * lerp(1.0, 1.5, lazinessStart)) || lazinessStart == 0) {
+    if (!started && (buildUp > buildUpThreshold * lerp(1.0, 1.5, lazinessStart)) || lazinessStart == 0 || isPump) {
         started = true;
     } else if (started && buildUp < buildUpThreshold * lerp(1.0, 0, lazinessStop)) {
         started = false;
@@ -277,7 +271,7 @@ void CoolingDevice::update() {
     if (!started) {
         targetSpeed = 0;
     } else {
-        auto curveSpeed = getSpeedFromCurve(currentHighScore - 2.0);
+        auto curveSpeed = getSpeedFromCurve(std::max(currentHighScore - 2.0, 0.0));
         auto delta = curveSpeed - currentSetSpeed;
 
         if (delta > 0.15) {
@@ -292,7 +286,7 @@ void CoolingDevice::update() {
     if (control->debug) {
         std::cout << name
         << ":\n\tscore: " << currentHighScore
-        << "\n\tspeed: " << targetSpeed
+        << "\n\tspeed: " << currentSetSpeed
         << "\n\trpm: " << readRpm() << std::endl;
     }
 }
@@ -304,13 +298,10 @@ CoolingDevice *CoolingDevice::loadDevice(YAML::Node &node, Control *control) {
 }
 
 double CoolingDevice::getSpeedFromCurve(double x) {
-    if (isPump) {
-        return 0.25 + 0.25 * x;
-    }
     double linear = x;
     double exponential = std::exp(4.6 * (x - 1.0));
-    double result = lerp(exponential, linear, linearity);
-    return result * (1.0 - minSpeed) + minSpeed;
+    double factor = lerp(exponential, linear, linearity);
+    return lerp(minSpeed, maxSpeed, factor);
 }
 
 bool CoolingDevice::checkIsResponsive() {

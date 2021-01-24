@@ -4,19 +4,20 @@
 #include <vector>
 #include <string>
 
-#include "SmBios.h"
+#include "Devices.h"
+#include "cpu/AMD19CPU.h"
 
-void SmBios::init()
+void Devices::init()
 {
     RawSMBIOSData* smBiosData = NULL;
-    this->getRaw(&smBiosData);
-    this->parseRaw(smBiosData);
+    this->getRawSMBios(&smBiosData);
+    this->parseRawSMBios(smBiosData);
     for (auto device : devices) {
         device->init();
     }
 }
 
-bool SmBios::getRaw(RawSMBIOSData** data) {
+bool Devices::getRawSMBios(RawSMBIOSData** data) {
     uint64_t error = ERROR_SUCCESS;
     uint32_t smBiosDataSize = 0;
     RawSMBIOSData* smBiosData = NULL; // Defined in this link
@@ -47,7 +48,7 @@ bool SmBios::getRaw(RawSMBIOSData** data) {
     return true;
 }
 
-void SmBios::parseRaw(RawSMBIOSData* data)
+void Devices::parseRawSMBios(RawSMBIOSData* data)
 {
     size_t offset = 0;
     uint8_t type = data->raw[offset];
@@ -106,8 +107,10 @@ void SmBios::parseRaw(RawSMBIOSData* data)
         case 0x01:
             //SYSTEM INFO
         case 0x04:
-            // PROCESSOR INFO
-        case 0x11: 
+            cpu = new AMD19CPU(type, handle, data, strings);
+            device = cpu;
+            break;
+        case 0x11:
             //MEMORY DEVICE INFO
         default: 
             device = new Device(type, handle, data, strings);
@@ -119,7 +122,7 @@ void SmBios::parseRaw(RawSMBIOSData* data)
     }
 }
 
-std::string SmBios::report() {
+std::string Devices::report() {
 
     std::string result;
     for (auto device : devices) {
@@ -128,8 +131,12 @@ std::string SmBios::report() {
     return result;
 }
 
-MainBoard *SmBios::getMainBoard() const {
+MainBoard *Devices::getMainBoard() const {
     return mainBoard;
+}
+
+CPU *Devices::getCpu() const {
+    return cpu;
 }
 
 

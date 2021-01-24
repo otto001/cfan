@@ -72,6 +72,7 @@ protected:
     int rpmCurve[11]{};
     double startSpeed = 0.0;
     double minSpeed = 0.0;
+    double maxSpeed = 1.0;
     double lazinessStart = 0.6;
     double lazinessStop = 0.6;
     double linearity = 0.0;
@@ -106,9 +107,9 @@ public:
 
     bool setToManual();
 
-    bool setToQFanControl();
+    bool setToSmartFanIVFanControl();
 
-    [[nodiscard]] int readRpm();
+    [[nodiscard]] int readRpm() const;
 
 
     [[nodiscard]] ThermalZone *getHottestZone();

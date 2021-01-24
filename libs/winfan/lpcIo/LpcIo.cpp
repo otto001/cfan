@@ -4,89 +4,34 @@
 #include <iostream>
 #include "../OlsDll.h"
 #include "../Chips.h"
-#include "../SuperIo/SuperIo.h"
-#include "../superIo/NCT6775.h"
+#include "../devices/mainboard/superIo/SuperIo.h"
+#include "../devices/mainboard/superIo/NCT6775.h"
 #include <chrono>
 #include <thread>
-
-
-#define ISA_BUS_MUTEX_NAME  L"Global\\Access_ISABUS.HTP.Method"
-
-HANDLE LpcIo::isaBusMutex = NULL;
 
 
 const std::vector<LpcIoPort*> LpcIo::lpcIoPorts = {new LpcIoPort(0x2E, 0x2F), new LpcIoPort(0x4E, 0x4F)};
 
 void LpcIo::init()
 {
-	isaBusMutexOpen();
 	
 }
 
 SuperIo* LpcIo::detect()
 {
-	chip = Chip::Unknown;
-	ldn = LDN::Unknown;
-	if (isaBusMutexWait(100)) {
-		for (auto port : lpcIoPorts) {
-			auto result = detectWinboundFintek(port);
-			if (result) {
-				return result;
-			}
-		}
-		isaBusMutexRelease();
-	}
+    chip = Chip::Unknown;
+    ldn = LDN::Unknown;
+    if (OlsDll::isaBusMutexWait(100)) {
+        for (auto port : lpcIoPorts) {
+            auto result = detectWinboundFintek(port);
+            if (result) {
+                return result;
+            }
+        }
+        OlsDll::isaBusMutexRelease();
+    }
+    return nullptr;
 }
-
-bool LpcIo::isaBusMutexWait(int millisecondsTimeout) {
-	if (isaBusMutex == NULL) {
-		return false;
-	}
-	
-	DWORD res = WaitForSingleObject(isaBusMutex, millisecondsTimeout);
-	return res == WAIT_OBJECT_0;
-}
-
-bool LpcIo::isaBusMutexRelease() {
-	if (isaBusMutex == NULL) {
-		return false;
-	}
-	return ReleaseMutex(isaBusMutex);
-}
-
-bool LpcIo::isaBusMutexOpen()
-{
-	if (isaBusMutex != NULL) {
-		return true;
-	}
-	isaBusMutex = CreateMutex(NULL, FALSE, ISA_BUS_MUTEX_NAME);
-	if (isaBusMutex != NULL) {
-		std::wcout << ISA_BUS_MUTEX_NAME << L" Mutex was created\n";
-		return true;
-	}
-	else {
-		isaBusMutex = OpenMutex(SYNCHRONIZE, FALSE, ISA_BUS_MUTEX_NAME);
-		if (isaBusMutex != NULL) {
-			std::wcout << ISA_BUS_MUTEX_NAME << L" Mutex could not be opened/created\n";
-		}
-		else {
-			std::wcout << ISA_BUS_MUTEX_NAME << L" Mutex was opened\n";
-			return true;
-
-		}
-	}
-	return false;
-}
-
-bool LpcIo::isaBusMutexClose()
-{
-	bool res = CloseHandle(isaBusMutex);
-	if (res) {
-		isaBusMutex = NULL;
-	}
-	return res;
-}
-
 
 SuperIo* LpcIo::detectWinboundFintek(const LpcIoPort* port)
 {

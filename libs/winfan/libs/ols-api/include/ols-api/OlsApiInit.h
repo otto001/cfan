@@ -137,7 +137,7 @@ BOOL InitOpenLibSys(HMODULE *hModule)
 #ifdef _M_X64
 	*hModule = LoadLibrary(_T("WinRing0x64.dll"));
 #else
-	*hModule = LoadLibrary(_T("WinRing0.dll"));
+	*hModuleDll = LoadLibrary(_T("WinRing0.dll"));
 #endif
 
 	if(*hModule == NULL)
@@ -221,9 +221,9 @@ BOOL InitOpenLibSys(HMODULE *hModule)
 
 	// Memory
 #ifdef _PHYSICAL_MEMORY_SUPPORT
-	ReadDmiMemory =			(_ReadDmiMemory)		GetProcAddress (*hModule, "ReadDmiMemory");
-	ReadPhysicalMemory =	(_ReadPhysicalMemory)	GetProcAddress (*hModule, "ReadPhysicalMemory");
-	WritePhysicalMemory =	(_WritePhysicalMemory)	GetProcAddress (*hModule, "WritePhysicalMemory");
+	ReadDmiMemory =			(_ReadDmiMemory)		GetProcAddress (*hModuleDll, "ReadDmiMemory");
+	ReadPhysicalMemory =	(_ReadPhysicalMemory)	GetProcAddress (*hModuleDll, "ReadPhysicalMemory");
+	WritePhysicalMemory =	(_WritePhysicalMemory)	GetProcAddress (*hModuleDll, "WritePhysicalMemory");
 #endif
 
 	//-----------------------------------------------------------------------------

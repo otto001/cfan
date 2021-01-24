@@ -11,8 +11,25 @@ namespace OlsDll {
 	bool writeIoPortWord(WORD port, WORD word);
 	bool readIoPortWord(WORD port, WORD* value);
 
-	extern HMODULE hModule;
+
+    bool writePciConfigDword(DWORD address, BYTE reg, DWORD value);
+    bool readPciConfigDword(DWORD address, BYTE reg, DWORD* value);
+
+	extern HMODULE hModuleDll;
 	extern bool isInitialized;
+
+
+    extern HANDLE isaBusMutex;
+    bool isaBusMutexWait(int millisecondsTimeout);
+    bool isaBusMutexRelease();
+    bool isaBusMutexOpen();
+    bool isaBusMutexClose();
+
+    extern HANDLE pciBusMutex;
+    bool pciBusMutexWait(int millisecondsTimeout);
+    bool pciBusMutexRelease();
+    bool pciBusMutexOpen();
+    bool pciBusMutexClose();
 };
 
 

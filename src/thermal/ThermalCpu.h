@@ -16,12 +16,6 @@ protected:
     int _getLoad() override;
     int _getTemp() override;
 
-    std::vector<std::string> tempPaths;
-
-    bool load(YAML::Node node) override;
-
-public:
-
 };
 
 

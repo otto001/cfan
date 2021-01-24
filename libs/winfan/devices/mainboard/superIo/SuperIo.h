@@ -2,8 +2,8 @@
 #define WINFAN_SUPERIO_H
 
 #include <vector>
-#include "../lpcIo/LpcIoPort.h"
-#include "../Chips.h"
+#include "../../../lpcIo/LpcIoPort.h"
+#include "../../../Chips.h"
 
 
 class SuperIo {
@@ -26,8 +26,9 @@ protected:
 
 public:
 
-    virtual void setControl(int index, uint8_t* value) {
-
+    virtual void setFanControlMode(int index, uint8_t value) {
+    }
+    virtual void setFanSpeed(int index, uint8_t value) {
     }
     virtual void update() {
 

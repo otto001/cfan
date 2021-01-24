@@ -12,64 +12,38 @@
 #include "OlsDll.h"
 #include "Service.h"
 #include "lpcIo/LpcIo.h"
-#include "devices/SmBios.h"
+#include "devices/Devices.h"
 #define DRIVER_NAME "WinRing0_1_2_0"
 #define DRIVER_NAME_W L"WinRing0_1_2_0"
 
 
-SmBios* smBios;
+Devices* smBios;
 long long WinFan::interval = 500;
 
 
-void loadDriver() {
-//    auto driverFile = new TCHAR[200];
-//    strcpy_s(driverFile, 200, R"(C:\Users\ludwig\Documents\GitHub\cfan\drivers\WinRing0x64.sys)");
-//    auto driverName = new TCHAR[200];
-//    strcpy_s(driverName, 200, DRIVER_NAME);
-//    CService service(driverFile, driverName, driverName, SERVICE_DEMAND_START);
-//
-//
-//    auto result = service.CreateSvc();
-//    if (result == SVC_OK) {
-//        result = service.StartSvc();
-//
-//        if (result == SVC_OK) {
-//            std::cout << "Started " << DRIVER_NAME << " service." << std::endl;
-//
-//
-//        } else {
-//            auto error = GetLastError();
-//            if (error == 1056) {
-//                std::cout << "Failed to start " << DRIVER_NAME << " service. Error 1056. Stopping service and retrying..." <<  std::endl;
-//
-//                service.StopSvc(true);
-//
-//                result = service.StartSvc();
-//                if (result == SVC_OK) {
-//                    std::cout << "Started " << DRIVER_NAME << " service." << std::endl;
-//                }
-//            }
-//        }
-//    }
-//    else {
-//        std::cerr << "Failed to create " << DRIVER_NAME << " service." << std::endl;
-//    }
-    return;
-}
-
 bool WinFan::init() {
     OlsDll::init();
-    LpcIo::isaBusMutexOpen();
-    smBios = new SmBios();
+    smBios = new Devices();
     smBios->init();
     return true;
 }
 
-bool WinFan::readFanRpm(uint8_t fanIndex, int32_t* result, bool force) {
-    if (!smBios) return false;
+
+bool WinFan::close() {
+    OlsDll::close();
+    return false;
+}
+
+SuperIo* getSuperIO() {
+    if (!smBios) return nullptr;
     auto mainBoard = smBios->getMainBoard();
-    if (!mainBoard) return false;
+    if (!mainBoard) return nullptr;
     auto superIo = mainBoard->getSuperIo();
+    return superIo;
+}
+
+bool WinFan::readFanRpm(uint8_t fanIndex, int32_t* result, bool force) {
+    auto superIo = getSuperIO();
     if (!superIo) return false;
     superIo->timedUpdate(force);
     if (fanIndex >= superIo->getFans().size()) return false;
@@ -82,3 +56,34 @@ bool WinFan::readFanRpm(uint8_t fanIndex, int32_t* result, bool force) {
 
     return true;
 }
+
+bool WinFan::setFanSpeed(uint8_t fanIndex, int32_t speed, bool force) {
+    auto superIo = getSuperIO();
+    if (!superIo) return false;
+    superIo->timedUpdate(force);
+    if (fanIndex >= superIo->getFans().size()) return false;
+    superIo->setFanSpeed(fanIndex, speed);
+    return true;
+}
+
+bool WinFan::setFanControlMode(uint8_t fanIndex, int32_t mode, bool force) {
+    auto superIo = getSuperIO();
+    if (!superIo) return false;
+    superIo->timedUpdate(force);
+    if (fanIndex >= superIo->getFans().size()) return false;
+    superIo->setFanControlMode(fanIndex, mode);
+    return true;
+}
+
+bool WinFan::readCpuCoreTemp(int32_t *result, bool force) {
+    if (!smBios) return false;
+    auto cpu = smBios->getCpu();
+    if (!cpu) return false;
+    return cpu->readCpuCoreTemp(result);
+}
+
+
+
+
+
+

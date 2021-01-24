@@ -1,7 +1,7 @@
-#include "../pch.h"
+#include "../../../pch.h"
 #include "NCT6775.h"
-#include "../OlsDll.h"
-#include "../lpcIo/LpcIo.h"
+#include "../../../OlsDll.h"
+#include "../../../lpcIo/LpcIo.h"
 #include <iostream>
 
 /*
@@ -242,29 +242,44 @@ void NCT6775::restoreDefaultFanControl(int index) {
     }
 }
 
-void NCT6775::setControl(int index, uint8_t* value) {
-    if (!isNuvotonVendor)
-    return;
-
-    if (index < 0 || index >= controls.size())
+void NCT6775::setFanControlMode(int index, uint8_t value) {
+    if (!isNuvotonVendor) {
         return;
-
-    if (!LpcIo::isaBusMutexWait(10))
-    return;
-
-    if (value) {
-        saveDefaultFanControl(index);
-
-        // set manual mode
-        writeByte(FAN_CONTROL_MODE_REG[index], 0);
-
-        // set output value
-        writeByte(FAN_PWM_COMMAND_REG[index], *value);
-    } else {
-        restoreDefaultFanControl(index);
     }
 
-    LpcIo::isaBusMutexRelease();
+    if (index < 0 || index >= controls.size()) {
+        return;
+    }
+
+    if (!OlsDll::isaBusMutexWait(10)) {
+        return;
+    }
+
+    saveDefaultFanControl(index);
+
+    // set manual mode
+    writeByte(FAN_CONTROL_MODE_REG[index], 0);
+
+    OlsDll::isaBusMutexRelease();
+}
+
+void NCT6775::setFanSpeed(int index, uint8_t value) {
+    if (!isNuvotonVendor) {
+        return;
+    }
+
+    if (index < 0 || index >= controls.size()) {
+        return;
+    }
+
+    if (!OlsDll::isaBusMutexWait(10)) {
+        return;
+    }
+
+    // set output value
+    writeByte(FAN_PWM_COMMAND_REG[index], value);
+
+    OlsDll::isaBusMutexRelease();
 }
 
 void NCT6775::disableIOSpaceLock() {
@@ -292,7 +307,7 @@ void NCT6775::update() {
     if (!isNuvotonVendor)
         return;
 
-    if (!LpcIo::isaBusMutexWait(10))
+    if (!OlsDll::isaBusMutexWait(10))
         return;
 
     disableIOSpaceLock();
@@ -379,6 +394,5 @@ void NCT6775::update() {
       controls[i] = value / 2.55f;
     }
 
-    LpcIo::isaBusMutexRelease();
-    std::cout << "read" << std::endl;
+    OlsDll::isaBusMutexRelease();
 }

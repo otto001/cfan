@@ -1,7 +1,8 @@
 #pragma once
 #include <vector>
 #include "Device.h"
-#include "MainBoard.h"
+#include "mainboard/MainBoard.h"
+#include "cpu/CPU.h"
 #include <Windows.h>
 
 
@@ -15,17 +16,21 @@ struct RawSMBIOSData
     BYTE    raw[];
 };
 
-class SmBios
+class Devices
 {
 public:
     void init();
     std::string report();
 private:
-    bool getRaw(RawSMBIOSData**);
-    void parseRaw(RawSMBIOSData*);
+    bool getRawSMBios(RawSMBIOSData **data);
+    void parseRawSMBios(RawSMBIOSData *data);
 
     std::vector<Device*> devices;
     MainBoard* mainBoard;
+    CPU* cpu;
+public:
+    CPU *getCpu() const;
+
 public:
     MainBoard *getMainBoard() const;
 };

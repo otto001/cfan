@@ -1,9 +1,9 @@
-#include "../pch.h"
+#include "../../../pch.h"
 #include <chrono>
 
 #include "SuperIo.h"
 #include "NCT6775.h"
-#include "../include/winfan/winfan.h"
+#include "../../../include/winfan/winfan.h"
 
 
 SuperIo::SuperIo(Chip _chip, uint8_t _revision, uint16_t _port, const LpcIoPort* _lpcPort) : chip(_chip), revision(_revision), port(_port), lpcPort(_lpcPort)
