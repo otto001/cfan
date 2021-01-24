@@ -15,6 +15,8 @@ public:
 protected:
 	LpcIo* lpcIo = NULL;
 	SuperIo* superIo;
+public:
+    SuperIo *getSuperIo() const;
 
 };
 

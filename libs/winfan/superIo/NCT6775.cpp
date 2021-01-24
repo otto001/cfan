@@ -15,7 +15,7 @@
 
 */
 
-NCT6775::NCT6775(Chip _chip, uint8_t _revision, uint16_t _port, LpcIoPort* _lpcPort) : SuperIo(_chip, _revision, _port, _lpcPort) {
+NCT6775::NCT6775(Chip _chip, uint8_t _revision, uint16_t _port, const LpcIoPort* _lpcPort) : SuperIo(_chip, _revision, _port, _lpcPort) {
     restoreDefaultFanControlRequired = std::vector<bool>(7, false);
     initialFanControlMode = std::vector<uint8_t>(7, 0);
     initialFanPwmCommand = std::vector<uint8_t>(7, 0);
@@ -197,8 +197,8 @@ NCT6775::NCT6775(Chip _chip, uint8_t _revision, uint16_t _port, LpcIoPort* _lpcP
 }
 
 uint8_t NCT6775::readByte(uint16_t address) {
-    uint8_t bank = (uint8_t)(address >> 8);
-    uint8_t reg = (uint8_t)(address & 0xFF);
+    auto bank = (uint8_t)(address >> 8);
+    auto reg = (uint8_t)(address & 0xFF);
     
     OlsDll::writeIoPortByte(port + ADDRESS_REGISTER_OFFSET, BANK_SELECT_REGISTER);
     OlsDll::writeIoPortByte(port + DATA_REGISTER_OFFSET, bank);
@@ -209,8 +209,8 @@ uint8_t NCT6775::readByte(uint16_t address) {
 }
 
 void NCT6775::writeByte(uint16_t address, uint8_t value) {
-    uint8_t bank = (uint8_t)(address >> 8);
-    uint8_t reg = (uint8_t)(address & 0xFF);
+    auto bank = (uint8_t)(address >> 8);
+    auto reg = (uint8_t)(address & 0xFF);
     OlsDll::writeIoPortByte(port + ADDRESS_REGISTER_OFFSET, BANK_SELECT_REGISTER);
     OlsDll::writeIoPortByte(port + DATA_REGISTER_OFFSET, bank);
     OlsDll::writeIoPortByte(port + ADDRESS_REGISTER_OFFSET, reg);

@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
-#include "../devices/Device.h"
-#include "../devices/MainBoard.h"
+#include "Device.h"
+#include "MainBoard.h"
 #include <Windows.h>
 
 
@@ -26,5 +26,7 @@ private:
 
     std::vector<Device*> devices;
     MainBoard* mainBoard;
+public:
+    MainBoard *getMainBoard() const;
 };
 

@@ -12,12 +12,13 @@
 #include "OlsDll.h"
 #include "Service.h"
 #include "lpcIo/LpcIo.h"
-#include "superIo/SmBios.h"
+#include "devices/SmBios.h"
 #define DRIVER_NAME "WinRing0_1_2_0"
 #define DRIVER_NAME_W L"WinRing0_1_2_0"
 
 
 SmBios* smBios;
+long long WinFan::interval = 500;
 
 
 void loadDriver() {
@@ -60,5 +61,24 @@ bool WinFan::init() {
     OlsDll::init();
     LpcIo::isaBusMutexOpen();
     smBios = new SmBios();
+    smBios->init();
+    return true;
+}
+
+bool WinFan::readFanRpm(uint8_t fanIndex, int32_t* result, bool force) {
+    if (!smBios) return false;
+    auto mainBoard = smBios->getMainBoard();
+    if (!mainBoard) return false;
+    auto superIo = mainBoard->getSuperIo();
+    if (!superIo) return false;
+    superIo->timedUpdate(force);
+    if (fanIndex >= superIo->getFans().size()) return false;
+
+    auto rpm = (int32_t) superIo->getFans()[fanIndex];
+
+    if (result) {
+        *result = rpm;
+    }
+
     return true;
 }

@@ -103,7 +103,7 @@ void Control::init() {
         auto t2 = std::chrono::high_resolution_clock::now();
 
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
-        long sleepDuration = interval - duration;
+        auto sleepDuration = interval - duration;
 
         if (sleepDuration > 0) {
             System::sleep(sleepDuration);

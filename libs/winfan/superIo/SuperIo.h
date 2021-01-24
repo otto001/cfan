@@ -8,19 +8,21 @@
 
 class SuperIo {
 public:
-    SuperIo(Chip chip, uint8_t revision, uint16_t port, LpcIoPort* lpcPort);
+    SuperIo(Chip chip, uint8_t revision, uint16_t port, const LpcIoPort* lpcPort);
 protected:
     uint16_t port;
     uint8_t revision;
 
     Chip chip;
-    LpcIoPort* lpcPort;
+    const LpcIoPort* lpcPort;
 
 
     std::vector<float> voltages;
     std::vector<float> temperatures;
     std::vector<float> fans;
     std::vector<float> controls;
+
+    long long lastUpdate = 0;
 
 public:
 
@@ -30,6 +32,8 @@ public:
     virtual void update() {
 
     }
+
+    void timedUpdate(bool force=false);
 
     inline const std::vector<float>& getVoltages() {
         return voltages;

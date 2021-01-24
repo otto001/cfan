@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 
-#include "../superIo/SmBios.h"
+#include "SmBios.h"
 
 void SmBios::init()
 {
@@ -126,6 +126,10 @@ std::string SmBios::report() {
         result += device->report() + "\n\n";
     }
     return result;
+}
+
+MainBoard *SmBios::getMainBoard() const {
+    return mainBoard;
 }
 
 

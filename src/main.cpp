@@ -20,6 +20,10 @@ int main(int argc, char* argv[]) {
         std::cout << "Failed to load " << Control::configPath << std::endl;
     }
 
+#if WIN32
+    WinFan::interval = control.getInterval();
+#endif
+
     if (argc >= 2) {
         if (argv[1] == std::string("--curses")) {
             control.curses();

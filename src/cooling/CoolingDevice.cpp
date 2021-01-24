@@ -10,6 +10,10 @@
 #include <string>
 #include "../utils.h"
 
+#if WIN32
+#include <winfan/winfan.h>
+#endif
+
 
 CoolingDevice::CoolingDevice(Control *control) : control(control) {
 
@@ -105,7 +109,9 @@ bool CoolingDevice::setToManual() {
 
 int CoolingDevice::readRpm() {
 #if WIN32
-    return 0;
+    int32_t result;
+    WinFan::readFanRpm(index, &result);
+    return result;
 #else
     auto inputPath = getFanPath().string() + "_input";
     return readIntFromFile(inputPath);
@@ -151,6 +157,7 @@ bool CoolingDevice::load(YAML::Node node) {
 
     //path = readYamlField<std::string>(node, "path");
     name = readYamlField<std::string>(node, "name");
+    index = readYamlField<uint8_t>(node, "index") - 1;
 
 
     lazinessStart = readYamlField<double>(node, "laziness-start", 60);

@@ -108,7 +108,7 @@ enum class SourceNCT610X : uint8_t {
 class NCT6775 : public SuperIo
 {
 public:
-    NCT6775(Chip chip, uint8_t revision, uint16_t port, LpcIoPort* lpcPort);
+    NCT6775(Chip chip, uint8_t revision, uint16_t port, const LpcIoPort* lpcPort);
 private:
 
     bool isNuvotonVendor;

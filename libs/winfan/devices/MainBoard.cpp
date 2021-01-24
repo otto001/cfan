@@ -11,9 +11,9 @@ void MainBoard::init()
 {
 	lpcIo = new LpcIo();
 	lpcIo->init();
-	lpcIo->detect();
+    superIo = lpcIo->detect();
 
-	superIo = SuperIo::constructChip(lpcIo->getChip(), lpcIo->getChipRevision(), lpcIo->getChipPortAddress(), lpcIo->getChipPort());
+	//superIo = SuperIo::constructChip(lpcIo->getChip(), lpcIo->getChipRevision(), lpcIo->getChipPortAddress(), lpcIo->getChipPort());
 }
 
 std::string MainBoard::report()
@@ -24,4 +24,8 @@ std::string MainBoard::report()
 	result << superIo->getFans()[2] << std::endl;
 
 	return result.str();
+}
+
+SuperIo *MainBoard::getSuperIo() const {
+    return superIo;
 }

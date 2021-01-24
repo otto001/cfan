@@ -11,7 +11,7 @@ include_directories(libs/ols-api/include)
 add_library(winfan main.cpp winfan.cpp
         OlsDll.h OlsDll.cpp
         lpcIo/LpcIo.cpp lpcIo/LpcIo.h lpcIo/LpcIoPort.cpp lpcIo/LpcIoPort.h
-        devices/SmBios.cpp superIo/SmBios.h devices/MainBoard.cpp devices/MainBoard.h devices/Device.cpp devices/Device.h
+        devices/SmBios.cpp devices/SmBios.h devices/MainBoard.cpp devices/MainBoard.h devices/Device.cpp devices/Device.h
         superIo/NCT6775.cpp superIo/NCT6775.h superIo/SuperIo.cpp superIo/SuperIo.h
 
 
