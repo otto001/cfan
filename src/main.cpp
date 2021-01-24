@@ -1,7 +1,17 @@
 #include <iostream>
 #include "Control.h"
 
+#if WIN32
+#include <windows.h>
+#include <winfan/winfan.h>
+#endif
+
 int main(int argc, char* argv[]) {
+#if WIN32
+    WinFan::init();
+#endif
+
+
     Control control;
     bool success = control.load();
     if (success) {

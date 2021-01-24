@@ -12,7 +12,7 @@
 #include <algorithm>
 
 #if WIN32
-#include <windows.h>
+#include <Windows.h>
 #else
 #include <unistd.h>
 #endif

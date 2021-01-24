@@ -15,44 +15,28 @@ CoolingDevice::CoolingDevice(Control *control) : control(control) {
 
 }
 
-const std::filesystem::path &CoolingDevice::getPath() const {
-    return path;
+
+bool CoolingDevice::init() {
+    setToManual();
+    return true;
 }
 
-const std::string &CoolingDevice::getName() const {
-    return name;
-}
-
-int CoolingDevice::getIndex() const {
-
-    std::string fileName = path.filename().string();
-    size_t last_index = fileName.find_last_not_of("0123456789");
-    std::string digits = fileName.substr(last_index + 1);
-    int result = -1;
-    try {
-        result = (int) std::stoi(digits);
-    } catch (std::invalid_argument &e) {
-        result = -1;
-    } catch (std::out_of_range &e) {
-        result = -1;
-    }
-
-    return result;
-}
-
-
-std::filesystem::path CoolingDevice::getHwmonPath() const {
-    return path.parent_path();
-}
-
-std::filesystem::path CoolingDevice::getPwmPath() const {
-    return getPath();
-}
-
-std::filesystem::path CoolingDevice::getFanPath() const {
-    return getHwmonPath().append("fan" + std::to_string(getIndex()));
-}
-
+//int CoolingDevice::getIndex() const {
+//
+//    std::string fileName = path.filename().string();
+//    size_t last_index = fileName.find_last_not_of("0123456789");
+//    std::string digits = fileName.substr(last_index + 1);
+//    int result = -1;
+//    try {
+//        result = (int) std::stoi(digits);
+//    } catch (std::invalid_argument &e) {
+//        result = -1;
+//    } catch (std::out_of_range &e) {
+//        result = -1;
+//    }
+//
+//    return result;
+//}
 
 bool CoolingDevice::setSpeed(double speed, bool force) {
     speed = std::min(std::max(speed, 0.0), 1.0);
@@ -76,7 +60,9 @@ bool CoolingDevice::setSpeed(double speed, bool force) {
     if (!force && currentSetSpeedInt == speedInt) {
         return true;
     }
-
+#if WIN32
+    return false;
+#else
     std::ofstream file;
     file.open(path, std::ios::out | std::ios::trunc);
 
@@ -91,9 +77,13 @@ bool CoolingDevice::setSpeed(double speed, bool force) {
     std::cerr << "Failed to set speed of cooling device " << name << "!" << std::endl;
 
     return false;
+#endif
 }
 
 bool CoolingDevice::setToManual() {
+#if WIN32
+    return false;
+#else
     std::string enablePath = getPwmPath().string();
     enablePath.append("_enable");
 
@@ -109,11 +99,39 @@ bool CoolingDevice::setToManual() {
     }
     std::cerr << "Failed to set mode of cooling device " << name << " to manual!" << std::endl;
     return false;
+#endif
+
 }
 
 int CoolingDevice::readRpm() {
+#if WIN32
+    return 0;
+#else
     auto inputPath = getFanPath().string() + "_input";
     return readIntFromFile(inputPath);
+#endif
+}
+
+bool CoolingDevice::setToQFanControl() {
+#if WIN32
+    return false;
+#else
+    auto enablePath = getPwmPath().string();
+    enablePath.append("_enable");
+
+    std::ofstream file;
+    file.open(enablePath, std::ios::out | std::ios::trunc);
+
+    if (file.is_open()) {
+        file << 5;
+        file.close();
+
+        setSpeed(currentSetSpeed, true);
+        return true;
+    }
+    std::cerr << "Failed to set mode of cooling device " << name << " to QFan!" << std::endl;
+    return false;
+#endif
 }
 
 ThermalZone *CoolingDevice::getHottestZone() {
@@ -131,7 +149,7 @@ ThermalZone *CoolingDevice::getHottestZone() {
 
 bool CoolingDevice::load(YAML::Node node) {
 
-    path = readYamlField<std::string>(node, "path");
+    //path = readYamlField<std::string>(node, "path");
     name = readYamlField<std::string>(node, "name");
 
 
@@ -189,7 +207,7 @@ bool CoolingDevice::load(YAML::Node node) {
 YAML::Node *CoolingDevice::writeToYamlNode() {
     auto node = new YAML::Node(YAML::NodeType::Map);
     (*node)["name"] = name;
-    (*node)["path"] = path.string();
+    //(*node)["path"] = path.string();
 
     (*node)["is-pump"] = isPump;
 
@@ -211,10 +229,6 @@ YAML::Node *CoolingDevice::writeToYamlNode() {
     return node;
 }
 
-bool CoolingDevice::init() {
-    setToManual();
-    return true;
-}
 
 void CoolingDevice::update() {
     checkIsResponsive();
@@ -366,56 +380,4 @@ double CoolingDevice::getCurrentSetSpeed() const {
     return currentSetSpeed;
 }
 
-void CoolingDevice::setPath(const std::filesystem::path &path) {
-    CoolingDevice::path = path;
-}
 
-void CoolingDevice::setName(const std::string &name) {
-    CoolingDevice::name = name;
-}
-
-bool CoolingDevice::getIsPump() const {
-    return isPump;
-}
-
-void CoolingDevice::setIsPump(bool isPump) {
-    CoolingDevice::isPump = isPump;
-}
-
-const int *CoolingDevice::getRpmCurve() const {
-    return rpmCurve;
-}
-
-double CoolingDevice::getStartSpeed() const {
-    return startSpeed;
-}
-
-void CoolingDevice::setStartSpeed(double startSpeed) {
-    CoolingDevice::startSpeed = startSpeed;
-}
-
-double CoolingDevice::getMinSpeed() const {
-    return minSpeed;
-}
-
-void CoolingDevice::setMinSpeed(double minSpeed) {
-    CoolingDevice::minSpeed = minSpeed;
-}
-
-bool CoolingDevice::setToQFanControl() {
-    auto enablePath = getPwmPath().string();
-    enablePath.append("_enable");
-
-    std::ofstream file;
-    file.open(enablePath, std::ios::out | std::ios::trunc);
-
-    if (file.is_open()) {
-        file << 5;
-        file.close();
-
-        setSpeed(currentSetSpeed, true);
-        return true;
-    }
-    std::cerr << "Failed to set mode of cooling device " << name << " to QFan!" << std::endl;
-    return false;
-}

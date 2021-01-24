@@ -17,8 +17,12 @@ public:
 
     [[nodiscard]] const std::vector<CoolingDevice *> &getCoolingDevices() const;
 
+#if WIN32
+    static constexpr char configPath [] = "../example-config-win.yml";
+#else
     static constexpr char configPath [] = "/etc/cfan/config.yml";
-    static constexpr char sysPath [] = "/sys/cfan";
+#endif
+    //static constexpr char sysPath [] = "/sys/cfan";
 
 private:
     std::vector<ThermalZone*> thermalZones;

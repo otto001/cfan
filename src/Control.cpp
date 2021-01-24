@@ -32,7 +32,7 @@ bool Control::load() {
 
 
         auto coolingConfig = config["cooling"];
-        auto coolingDevicesConfig = coolingConfig["devices"].as<std::vector<YAML::Node>>();
+        auto coolingDevicesConfig = coolingConfig["fans"].as<std::vector<YAML::Node>>();
 
         for (auto &deviceConfig : coolingDevicesConfig) {
             auto device = CoolingDevice::loadDevice(deviceConfig, this);
@@ -65,7 +65,7 @@ bool Control::save() {
         auto node = device->writeToYamlNode();
         coolingNodes.push_back(*node);
     }
-    config["cooling"]["devices"] = coolingNodes;
+    config["cooling"]["fans"] = coolingNodes;
 
     YAML::Node thermalNodes(YAML::NodeType::Sequence);
     for (auto zone : thermalZones) {

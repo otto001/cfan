@@ -72,6 +72,9 @@ void Detector::run() {
 }
 
 void Detector::detectCooling() {
+#if WIN32
+    return;
+#else
     std::string path = "/sys/class/hwmon";
     std::vector<CoolingDevice *> devices;
 
@@ -205,9 +208,13 @@ void Detector::detectCooling() {
 
     std::cout << "Reset all fans to QFan control" << std::endl;
     control->coolingDevices = devices;
+#endif
 }
 
 std::vector<CoolingDevice *> Detector::getCoolingDevicesFromHwmon(const std::filesystem::path &path) {
+#if WIN32
+    return {};
+#else
     static const std::regex re("pwm\\d+");
 
     std::vector<CoolingDevice *> devices;
@@ -221,6 +228,7 @@ std::vector<CoolingDevice *> Detector::getCoolingDevicesFromHwmon(const std::fil
     }
 
     return devices;
+#endif
 }
 
 void Detector::resetCoolingDevicesSpeed(const std::vector<CoolingDevice *> &devices, const double speed) {

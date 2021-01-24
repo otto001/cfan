@@ -6,12 +6,21 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
 add_subdirectory(libs/yaml-cpp)
-
-
 include_directories(libs/yaml-cpp/include)
-add_executable(cfan main.cpp Control.cpp Control.h cooling/CoolingDevice.cpp cooling/CoolingDevice.h thermal/ThermalZone.cpp thermal/ThermalZone.h thermal/ThermalCpu.cpp thermal/ThermalCpu.h utils.h utils.cpp thermal/ThermalNvidiaGpu.cpp thermal/ThermalNvidiaGpu.h detection/Detector.cpp detection/Detector.h system-utils.cpp system-utils.h)
+
+IF (WIN32)
+    add_subdirectory(libs/winfan)
+    include_directories(libs/winfan/include)
+ENDIF()
+
+
+add_executable(cfan src/main.cpp src/Control.cpp src/Control.h src/cooling/CoolingDevice.cpp src/cooling/CoolingDevice.h src/thermal/ThermalZone.cpp src/thermal/ThermalZone.h src/thermal/ThermalCpu.cpp src/thermal/ThermalCpu.h src/utils.h src/utils.cpp src/thermal/ThermalNvidiaGpu.cpp src/thermal/ThermalNvidiaGpu.h src/detection/Detector.cpp src/detection/Detector.h src/system-utils.cpp src/system-utils.h libs/winfan/include/winfan/winfan.h)
+
 
 target_link_libraries(cfan yaml-cpp)
+IF (WIN32)
+    target_link_libraries(cfan winfan)
+ENDIF()
 
 #find_package(Curses REQUIRED)
 
