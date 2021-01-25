@@ -10,8 +10,11 @@
 #include <string>
 #include "../utils.h"
 
+
 #if WIN32
 #include <winfan/winfan.h>
+#else
+#include "../linux/linux-utils.h"
 #endif
 
 
@@ -20,6 +23,7 @@ CoolingDevice::CoolingDevice(Control *control) : control(control) {
 }
 
 bool CoolingDevice::init() {
+
     setToManual();
     return true;
 }
@@ -73,6 +77,7 @@ bool CoolingDevice::setSpeed(double speed, bool force) {
     } else {
         std::cerr << "Failed to set speed of cooling device " << name << "!" << std::endl;
     }
+    return success;
 }
 
 bool CoolingDevice::setToManual() {
@@ -126,14 +131,14 @@ bool CoolingDevice::setToSmartFanIVFanControl() {
         setSpeed(currentSetSpeed, true);
         return true;
     }
-    std::cerr << "Failed to set mode of cooling device " << name << " to QFan!" << std::endl;
+    std::cerr << "Failed to set mode of cooling device " << name << " to SmartFanIV!" << std::endl;
     return false;
 #endif
 }
 
-ThermalZone *CoolingDevice::getHottestZone() {
+std::pair<double, ThermalZone*> CoolingDevice::getHottestZone() {
     ThermalZone *hottestZone = nullptr;
-    currentHighScore = -1;
+    double currentHighScore = -1;
     for (auto zone : thermalZones) {
         auto score = zone->getScore();
         if (score > currentHighScore) {
@@ -141,7 +146,7 @@ ThermalZone *CoolingDevice::getHottestZone() {
             hottestZone = zone;
         }
     }
-    return hottestZone;
+    return {currentHighScore, hottestZone};
 }
 
 bool CoolingDevice::load(YAML::Node node) {
@@ -183,14 +188,6 @@ bool CoolingDevice::load(YAML::Node node) {
     } catch (LoadingException& e) {
     }
 
-    if (isPump) {
-        for (int i = 0; i < sizeof(rpmCurve)/sizeof(*rpmCurve)-1; i++) {
-            if (rpmCurve[i]*1.1 < rpmCurve[i+1]) {
-                startSpeed = (i+1)/11.0;
-                break;
-            }
-        }
-    }
 
     auto thermalZoneNames =  readYamlField<std::vector<std::string>>(node, "thermal-zones");
     for (auto &thermalZoneName : thermalZoneNames) {
@@ -199,6 +196,14 @@ bool CoolingDevice::load(YAML::Node node) {
             thermalZones.push_back(zone);
         }
     }
+
+#if !WIN32
+    auto hwmonName = readYamlField<std::string>(node, "hwmon-name");
+    if (!getHwmonPathByName(path, hwmonName)) {
+        return false;
+    }
+    path /= "pwm" + std::to_string(index+1);
+#endif
 
     return true;
 }
@@ -234,10 +239,7 @@ YAML::Node *CoolingDevice::writeToYamlNode() {
 void CoolingDevice::update() {
     checkIsResponsive();
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-result"
-    getHottestZone();
-#pragma clang diagnostic pop
+    auto currentHighScore = getHottestZone().first;
 
     double deltaSeconds = double(control->getInterval()) / 1000.0;
 
@@ -360,10 +362,6 @@ double CoolingDevice::calculateActualPwmSpeed() {
     double alpha = double(rpm - rpmCurve[i - 1]) / double(rpmCurve[i] - rpmCurve[i - 1]);
     double actualPwm = lerp((i - 1) / 10.0, i / 10.0, alpha);
     return actualPwm;
-}
-
-double CoolingDevice::getCurrentHighScore() const {
-    return currentHighScore;
 }
 
 bool CoolingDevice::getIsStarted() const {

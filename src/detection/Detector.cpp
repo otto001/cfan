@@ -96,7 +96,7 @@ void Detector::detectCooling() {
     auto it = devices.begin();
     while (it != devices.end()) {
         auto ignoreDevice = [=, &devices, &it]() {
-            (*it)->setToQFanControl();
+            (*it)->setToSmartFanIVFanControl();
             delete *it;
             it = devices.erase(it);
         };
@@ -135,7 +135,7 @@ void Detector::detectCooling() {
     std::cout << "All devices have been named. Checking fan behaviour..." << std::endl;
 
     for (auto device : devices) {
-        device->setToQFanControl();
+        device->setToSmartFanIVFanControl();
     }
 
     System::sleep(2000);
@@ -200,17 +200,17 @@ void Detector::detectCooling() {
         }
         std::cout << " OK" << std::endl;
 
-        device->setToQFanControl();
+        device->setToSmartFanIVFanControl();
 
     }
 
     resetCoolingDevicesSpeed(devices, 0.5);
     System::sleep(3000);
     for (auto device : devices) {
-        device->setToQFanControl();
+        device->setToSmartFanIVFanControl();
     }
 
-    std::cout << "Reset all fans to QFan control" << std::endl;
+    std::cout << "Reset all fans to SmartFanIV control" << std::endl;
     control->coolingDevices = devices;
 #endif
 }

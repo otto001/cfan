@@ -172,5 +172,11 @@ int Control::getInterval() const {
     return interval;
 }
 
+void Control::setFansToSmartFanIV() {
+    for (auto device : coolingDevices) {
+        device->setToSmartFanIVFanControl();
+    }
+}
+
 
 

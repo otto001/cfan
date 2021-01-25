@@ -17,6 +17,10 @@ protected:
 #if WIN32
 #else
     std::filesystem::path path;
+    const std::filesystem::path &getPath() const {
+        return path;
+    }
+
 #endif
     std::string name;
 public:

@@ -16,7 +16,7 @@ int ThermalZone::_getTemp() {
 #if WIN32
     return 100;
 #else
-    auto inputPath = path.string();
+    auto inputPath = getPath().string();
     inputPath.append("_input");
     int result = readIntFromFile(inputPath);
     if (result == -1) {

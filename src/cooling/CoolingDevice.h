@@ -41,7 +41,7 @@ public:
     }
 
     [[nodiscard]] inline std::filesystem::path getFanPath() const {
-        return getHwmonPath().append("fan" + std::to_string(getIndex()));
+        return getHwmonPath().append("fan" + std::to_string(getIndex()+1));
     }
 
 #endif
@@ -88,11 +88,8 @@ protected:
     // runtime
     double currentSetSpeed = 0;
     int currentSetSpeedInt = -1;
-    double currentHighScore = 0;
 
 public:
-    [[nodiscard]] double getCurrentHighScore() const;
-
     [[nodiscard]] bool getIsStarted() const;
 
     [[nodiscard]] double getCurrentSetSpeed() const;
@@ -112,7 +109,7 @@ public:
     [[nodiscard]] int readRpm() const;
 
 
-    [[nodiscard]] ThermalZone *getHottestZone();
+    [[nodiscard]] std::pair<double, ThermalZone*> getHottestZone();
 
     virtual bool load(YAML::Node node);
 

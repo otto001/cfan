@@ -6,7 +6,12 @@
 #include "../utils.h"
 
 #include <iostream>
+
+#if WIN32
 #include <winfan/winfan.h>
+#else
+#include "../linux/linux-utils.h"
+#endif
 
 int ThermalCpu::_getTemp() {
 #if WIN32
@@ -16,6 +21,7 @@ int ThermalCpu::_getTemp() {
     }
     return 100;
 #else
+    return ThermalZone::_getTemp();
 #endif
 }
 
@@ -23,3 +29,14 @@ int ThermalCpu::_getLoad() {
     return ThermalZone::_getLoad();
 }
 
+bool ThermalCpu::load(YAML::Node node) {
+    auto result = ThermalZone::load(node);
+#if !WIN32
+    if (getHwmonPathByName(path, "k10temp")) {
+        path /= "temp2";
+    } else {
+        return getHwmonPathByName(path, "coretemp");
+    }
+#endif
+    return result;
+}

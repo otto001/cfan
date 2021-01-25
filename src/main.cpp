@@ -24,16 +24,23 @@ int main(int argc, char* argv[]) {
     WinFan::interval = control.getInterval();
 #endif
 
-    if (argc >= 2) {
-        if (argv[1] == std::string("--curses")) {
-            control.curses();
-        } else if (argv[1] == std::string("--detect")) {
-            control.detect();
-            return 0;
-        } else if (argv[1] == std::string("--debug")) {
+    std::vector<std::string> args(argv + 1, argv + argc);
+
+    if (std::find(args.begin(), args.end(), "--detect") != args.end()) {
+        control.detect();
+        std::cout << "Detection complete." << std::endl;
+        return 0;
+    } else if (std::find(args.begin(), args.end(), "--smartfaniv") != args.end()) {
+        control.setFansToSmartFanIV();
+        std::cout << "Reset all fans to SmartFanIV control." << std::endl;
+        return 0;
+    } else {
+        if (std::find(args.begin(), args.end(), "--debug") != args.end()) {
+            std::cout << "Debug on." << std::endl;
             control.debug = true;
         }
     }
+
     control.run();
     return 0;
 }
