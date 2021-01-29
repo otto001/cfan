@@ -12,6 +12,9 @@
 
 
 class ThermalGpu : public ThermalZone {
+public:
+    ThermalGpu() = default;
+    virtual ~ThermalGpu() = default;
 protected:
     int _getLoad() override;
     int _getTemp() override;

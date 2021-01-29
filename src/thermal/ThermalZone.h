@@ -11,20 +11,25 @@
 
 
 class ThermalZone {
+public:
+
+    ThermalZone() = default;
+    virtual ~ThermalZone() = default;
+
     friend class Detector;
 
 protected:
 #if WIN32
 #else
     std::filesystem::path path;
-    const std::filesystem::path &getPath() const {
+    [[nodiscard]] const std::filesystem::path &getPath() const {
         return path;
     }
 
 #endif
     std::string name;
 public:
-    const std::string &getName() const;
+    [[nodiscard]] const std::string &getName() const;
 
 protected:
     int idle = 50;

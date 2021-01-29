@@ -14,6 +14,7 @@ class Control;
 class CoolingDevice {
 public:
     CoolingDevice(Control *control);
+    virtual ~CoolingDevice() = default;
 
     friend class Detector;
 

@@ -12,6 +12,9 @@
 
 
 class ThermalCpu : public ThermalZone {
+public:
+    ThermalCpu() = default;
+    virtual ~ThermalCpu() = default;
 protected:
     int _getLoad() override;
     int _getTemp() override;

@@ -9,6 +9,9 @@
 #include "ThermalZone.h"
 
 class ThermalNvidiaGpu  : public ThermalZone {
+public:
+    ThermalNvidiaGpu() = default;
+    virtual ~ThermalNvidiaGpu() = default;
 protected:
     int _getLoad() override;
     int _getTemp() override;

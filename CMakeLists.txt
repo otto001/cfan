@@ -3,7 +3,7 @@ project(cfan)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS "-Os -Wall -Wextra")
+set(CMAKE_CXX_FLAGS "-Os -Wall")
 
 add_subdirectory(libs/yaml-cpp)
 include_directories(libs/yaml-cpp/include)
