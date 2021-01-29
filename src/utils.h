@@ -55,7 +55,7 @@ template<typename T>
 std::string join(const T arr[], size_t n, std::string sep) {
     std::string result;
 
-    for (int i = 0; i < n; ++i) {
+    for (size_t i = 0; i < n; ++i) {
         result += std::to_string(arr[i]);
         if (i < n-1) {
             result += sep;

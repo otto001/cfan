@@ -180,7 +180,7 @@ bool CoolingDevice::load(YAML::Node node) {
         size_t start = 0;
         for (int &rpm : rpmCurve) {
             auto end = curveString.find('-', start);
-            if (end == -1) end = curveString.size();
+            if (end == (size_t) -1) end = curveString.size();
             rpm = parseInt(curveString.substr(start, end - start));
             start = end + 1;
         }
@@ -263,7 +263,7 @@ void CoolingDevice::update() {
     buildUp = std::max(0.0, buildUp);
 
     bool started = currentSetSpeed != 0;
-    if (!started && (buildUp > buildUpThreshold * lerp(1.0, 1.5, lazinessStart)) || lazinessStart == 0 || isPump) {
+    if (!started && ((buildUp > buildUpThreshold * lerp(1.0, 1.5, lazinessStart)) || lazinessStart == 0 || isPump)) {
         started = true;
     } else if (started && buildUp < buildUpThreshold * lerp(1.0, 0, lazinessStop)) {
         started = false;
