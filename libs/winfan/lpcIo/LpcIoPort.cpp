@@ -44,14 +44,12 @@ uint8_t LpcIoPort::readRegister(uint8_t reg) const {
 	return 0;
 }
 
-uint16_t LpcIoPort::readRegisterWord(uint8_t reg) const
-{
+uint16_t LpcIoPort::readRegisterWord(uint8_t reg) const {
 	return (uint16_t)((readRegister(reg) << 8) | readRegister((byte)(reg + 1)));
 }
 
 
-void LpcIoPort::selectLdn(LDN ldn) const
-{
+void LpcIoPort::selectLdn(LDN ldn) const {
 	OlsDll::writeIoPortByte(registerPort, DEVCIE_SELECT_REGISTER);
-	OlsDll::writeIoPortByte(registerPort, (uint8_t) ldn);
+	OlsDll::writeIoPortByte(valuePort, (uint8_t) ldn);
 }

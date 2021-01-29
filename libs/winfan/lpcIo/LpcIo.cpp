@@ -25,6 +25,7 @@ SuperIo* LpcIo::detect()
         for (auto port : lpcIoPorts) {
             auto result = detectWinboundFintek(port);
             if (result) {
+                OlsDll::isaBusMutexRelease();
                 return result;
             }
         }
