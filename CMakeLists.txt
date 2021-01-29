@@ -18,6 +18,7 @@ add_executable(cfan src/main.cpp src/Control.cpp src/Control.h
         src/cooling/CoolingDevice.cpp src/cooling/CoolingDevice.h
         src/thermal/ThermalZone.cpp src/thermal/ThermalZone.h
         src/thermal/ThermalCpu.cpp src/thermal/ThermalCpu.h
+        src/thermal/ThermalGpu.cpp src/thermal/ThermalGpu.h
         src/thermal/ThermalNvidiaGpu.cpp src/thermal/ThermalNvidiaGpu.h
         src/utils.h src/utils.cpp
         src/detection/Detector.cpp src/detection/Detector.h

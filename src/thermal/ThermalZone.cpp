@@ -7,6 +7,7 @@
 #include "ThermalCpu.h"
 #include "../utils.h"
 #include "ThermalNvidiaGpu.h"
+#include "ThermalGpu.h"
 
 const std::string &ThermalZone::getName() const {
     return name;
@@ -77,10 +78,10 @@ ThermalZone *ThermalZone::loadZone(YAML::Node& node) {
         zone = new ThermalZone();
     } else if (type == "cpu") {
         zone = new ThermalCpu();
+    } else if (type == "gpu") {
+        zone = new ThermalGpu();
     }
-//    } else if (className == "ThermalNvidiaGpu") {
-//        zone = new ThermalNvidiaGpu();
-//    }
+
 
     if (zone) {
         zone->load(node);
