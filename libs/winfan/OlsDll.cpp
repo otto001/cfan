@@ -32,7 +32,7 @@ bool OlsDll::init()
 	}
     OlsDll::isaBusMutexOpen();
     OlsDll::pciBusMutexOpen();
-    return false;
+    return OlsDll::isInitialized;
 }
 
 bool OlsDll::close() {
@@ -46,7 +46,7 @@ bool OlsDll::writeIoPortByte(WORD port, BYTE byte)
 {
 	bool res = WriteIoPortByteEx(port, byte);
 	if (!res) {
-		std::wcout << L"OlsDll writeIoPort: Could not write to port" << port;
+		std::cerr << "OlsDll writeIoPort: Could not write to port " << port << std::endl;
 	}
 	return res;
 }
@@ -55,7 +55,7 @@ bool OlsDll::readIoPortByte(WORD port, BYTE* value)
 {
 	bool res = ReadIoPortByteEx(port, value);
 	if (!res) {
-		std::wcout << L"OlsDll readIoPort: Could not read from port" << port;
+		std::cerr << L"OlsDll readIoPort: Could not read from port " << port << std::endl;
 	}
 	return res;
 }
@@ -64,7 +64,7 @@ bool OlsDll::writeIoPortWord(WORD port, WORD word)
 {
 	bool res = WriteIoPortWordEx(port, word);
 	if (!res) {
-		std::wcout << L"OlsDll writeIoPort: Could not write to port" << port;
+		std::cerr << L"OlsDll writeIoPort: Could not write to port " << port << std::endl;
 	}
 	return res;
 }
@@ -73,7 +73,7 @@ bool OlsDll::readIoPortWord(WORD port, WORD* value)
 {
 	bool res = ReadIoPortWordEx(port, value);
 	if (!res) {
-		std::wcout << L"OlsDll readIoPort: Could not read from port" << port;
+		std::cerr << L"OlsDll readIoPort: Could not read from port " << port << std::endl;
 	}
 	return res;
 }
@@ -82,7 +82,7 @@ bool OlsDll::readIoPortWord(WORD port, WORD* value)
 bool OlsDll::writePciConfigDword(DWORD address, BYTE reg, DWORD value) {
     bool res = WritePciConfigDwordEx(address, reg, value);
     if (!res) {
-        std::wcout << L"OlsDll writeIoPort: Could not write to port" << address;
+        std::cerr << L"OlsDll writeIoPort: Could not write to port " << address << std::endl;
     }
     return res;
 }
@@ -90,7 +90,7 @@ bool OlsDll::writePciConfigDword(DWORD address, BYTE reg, DWORD value) {
 bool OlsDll::readPciConfigDword(DWORD address, BYTE reg, DWORD* value) {
     bool res = ReadPciConfigDwordEx(address, reg, value);
     if (!res) {
-        std::wcout << L"OlsDll readIoPort: Could not read from port" << address;
+        std::cerr << L"OlsDll readIoPort: Could not read from port " << address << std::endl;
     }
     return res;
 }

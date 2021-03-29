@@ -57,7 +57,7 @@ bool CoolingDevice::setSpeed(double speed, bool force) {
     if (!force && currentSetSpeedInt == speedInt) {
         return true;
     }
-    bool success;
+    bool success = false;
 #if WIN32
     success = WinFan::setFanSpeed(index, speedInt);
 #else
@@ -65,7 +65,6 @@ bool CoolingDevice::setSpeed(double speed, bool force) {
     file.open(path, std::ios::out | std::ios::trunc);
 
     if (file.is_open()) {
-
         file << speedInt;
         file.close();
         success = true;
@@ -81,8 +80,9 @@ bool CoolingDevice::setSpeed(double speed, bool force) {
 }
 
 bool CoolingDevice::setToManual() {
+    bool success = false;
 #if WIN32
-    return WinFan::setFanControlMode(index, 1);
+    success = WinFan::setFanControlMode(index, 1);
 #else
     std::string enablePath = getPwmPath().string();
     enablePath.append("_enable");
@@ -93,14 +93,15 @@ bool CoolingDevice::setToManual() {
     if (file.is_open()) {
         file << 1;
         file.close();
-
         setSpeed(currentSetSpeed, true);
-        return true;
+        success = true;
     }
-    std::cerr << "Failed to set mode of cooling device " << name << " to manual!" << std::endl;
-    return false;
 #endif
 
+    if (!success) {
+        std::cerr << "Failed to set mode of cooling device " << name << " to manual!" << std::endl;
+    }
+    return success;
 }
 
 int CoolingDevice::readRpm() const {
@@ -115,8 +116,10 @@ int CoolingDevice::readRpm() const {
 }
 
 bool CoolingDevice::setToSmartFanIVFanControl() {
+    bool success = false;
+
 #if WIN32
-    return WinFan::setFanControlMode(index, 5);
+    success = WinFan::setFanControlMode(index, 5);
 #else
     auto enablePath = getPwmPath().string();
     enablePath.append("_enable");
@@ -127,13 +130,14 @@ bool CoolingDevice::setToSmartFanIVFanControl() {
     if (file.is_open()) {
         file << 5;
         file.close();
-
-        setSpeed(currentSetSpeed, true);
-        return true;
+        success = true;
     }
-    std::cerr << "Failed to set mode of cooling device " << name << " to SmartFanIV!" << std::endl;
-    return false;
+    success = false;
 #endif
+    if (!success) {
+        std::cerr << "Failed to set mode of cooling device " << name << " to SmartFanIV!" << std::endl;
+    }
+    return success;
 }
 
 std::pair<double, ThermalZone*> CoolingDevice::getHottestZone() {

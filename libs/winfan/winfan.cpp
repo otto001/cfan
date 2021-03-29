@@ -22,7 +22,9 @@ long long WinFan::interval = 500;
 
 
 bool WinFan::init() {
-    OlsDll::init();
+    if (!OlsDll::init()) {
+        return false;
+    }
     smBios = new Devices();
     smBios->init();
     return true;

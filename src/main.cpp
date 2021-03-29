@@ -1,5 +1,6 @@
 #include <iostream>
 #include "Control.h"
+#include "system-utils.h"
 
 #if WIN32
 #include <windows.h>
@@ -8,13 +9,16 @@
 
 int main(int argc, char* argv[]) {
 #if WIN32
-    WinFan::init();
+    if (!WinFan::init()) {
+        System::sleep(2000);
+        return -1;
+    }
 #endif
 
 
     Control control;
-    bool success = control.load();
-    if (success) {
+    bool loadSuccess = control.load();
+    if (loadSuccess) {
         std::cout << "Successfully loaded " << Control::configPath << std::endl;
     } else {
         std::cout << "Failed to load " << Control::configPath << std::endl;
@@ -40,7 +44,10 @@ int main(int argc, char* argv[]) {
             control.debug = true;
         }
     }
-
+    if (!loadSuccess) {
+        System::sleep(2000);
+        return -2;
+    }
     control.run();
     return 0;
 }

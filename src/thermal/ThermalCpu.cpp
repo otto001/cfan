@@ -19,6 +19,7 @@ int ThermalCpu::_getTemp() {
     if (WinFan::readCpuCoreTemp(&result)) {
         return result;
     }
+    std::cerr << "Failed to read temperature of thermal zone (cpu) " << name << std::endl;
     return 100;
 #else
     return ThermalZone::_getTemp();
