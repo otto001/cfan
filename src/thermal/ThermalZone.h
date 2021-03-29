@@ -19,6 +19,7 @@ public:
     friend class Detector;
 
 protected:
+    std::string name;
 #if WIN32
 #else
     std::filesystem::path path;
@@ -27,7 +28,6 @@ protected:
     }
 
 #endif
-    std::string name;
 public:
     [[nodiscard]] const std::string &getName() const;
 

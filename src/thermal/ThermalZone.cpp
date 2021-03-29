@@ -14,9 +14,6 @@ const std::string &ThermalZone::getName() const {
 }
 
 int ThermalZone::_getTemp() {
-#if WIN32
-    return 100;
-#else
     auto inputPath = getPath().string();
     inputPath.append("_input");
     int result = readIntFromFile(inputPath);
@@ -24,8 +21,8 @@ int ThermalZone::_getTemp() {
         return -1;
     }
     return result/1000;
-#endif
 }
+
 
 int ThermalZone::_getLoad() {
     return -1;
@@ -75,7 +72,7 @@ ThermalZone *ThermalZone::loadZone(YAML::Node& node) {
     ThermalZone *zone = nullptr;
 
     if (type == "probe") {
-        zone = new ThermalZone();
+        zone = new ThermalProbe();
     } else if (type == "cpu") {
         zone = new ThermalCpu();
     } else if (type == "gpu") {

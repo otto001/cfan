@@ -11,6 +11,7 @@
 #include <exception>
 #include <utility>
 #include <iostream>
+#include <ctime>
 
 #define SEC_TO_MICROSEC(x) ((x)*1000000)
 
@@ -95,6 +96,8 @@ T readYamlField(YAML::Node node, const std::string& name, T defaultValue) {
         return defaultValue;
     }
 }
+
+std::string currentDateTimeFormatted();
 
 char asciiToLower(char in);
 

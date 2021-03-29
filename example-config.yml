@@ -1,7 +1,11 @@
+log: true
+interval: 1000
 cooling:
   devices:
     - name: front
-      path: /sys/class/hwmon/hwmon2/pwm3
+      hwmon: nct6775
+      hwmon-name: nct6798
+      index: 3
       start-speed: 10
       linearity: 0
       laziness-start: 60
@@ -9,101 +13,59 @@ cooling:
       rpm-curve: 0-174-346-524-652-807-945-1070-1180-1285-1370
       thermal-zones:
         - CPU
+        - GPU
     - name: back
-      path: /sys/class/hwmon/hwmon2/pwm1
+      hwmon: nct6775
+      hwmon-name: nct6798
+      index: 1
       start-speed: 11
-      linearity: 0
+      linearity: 30
       laziness-start: 0
       laziness-stop: 100
       rpm-curve: 0-160-341-525-685-834-984-1136-1252-1387-1500
       thermal-zones:
         - CPU
+        - GPU
     - name: top
-      path: /sys/class/hwmon/hwmon2/pwm4
+      hwmon: nct6775
+      hwmon-name: nct6798
+      index: 4
       is-pump: false
       start-speed: 10
-      linearity: 0
+      linearity: 30
       laziness-start: 0
       laziness-stop: 100
       rpm-curve: 0-167-340-516-663-809-950-1086-1197-1309-1424
       thermal-zones:
         - CPU
     - name: pump
-      path: /sys/class/hwmon/hwmon2/pwm2
+      hwmon: nct6775
+      hwmon-name: nct6798
+      index: 2
       is-pump: true
-      linearity: 0
+      linearity: 30
+      min-speed: 20
+      max-speed: 50
       rpm-curve: 1248-1244-1246-2364-3435-4455-4470-4485-4485-4470-4530
       thermal-zones:
         - CPU
 thermal:
   zones:
-    - name: nct6798_AUXTIN3
-      path: /sys/class/hwmon/hwmon2/temp6
-      idle: 50
-      desired: 60
-      critical: 80
-    - name: nct6798_AUXTIN0
-      path: /sys/class/hwmon/hwmon2/temp3
-      idle: 50
-      desired: 60
-      critical: 80
-    - name: nct6798_PECI Agent 0 Calibration
-      path: /sys/class/hwmon/hwmon2/temp7
-      idle: 50
-      desired: 60
-      critical: 80
-    - name: nct6798_AUXTIN1
-      path: /sys/class/hwmon/hwmon2/temp4
-      idle: 50
-      desired: 60
-      critical: 80
-    - name: nct6798_SYSTIN
-      path: /sys/class/hwmon/hwmon2/temp1
-      idle: 50
-      desired: 60
-      critical: 80
-    - name: nct6798_CPUTIN
-      path: /sys/class/hwmon/hwmon2/temp2
-      idle: 50
-      desired: 60
-      critical: 80
-    - name: nvme_Sensor 2
-      path: /sys/class/hwmon/hwmon0/temp3
-      idle: 50
-      desired: 60
-      critical: 80
-    - name: nvme_Composite
-      path: /sys/class/hwmon/hwmon0/temp1
-      idle: 50
-      desired: 60
-      critical: 80
-    - name: nvme_Sensor 1
-      path: /sys/class/hwmon/hwmon0/temp2
-      idle: 50
-      desired: 60
-      critical: 80
     - name: CPU
-      path: /sys/class/hwmon/hwmon3/temp1
+      type: CPU
       idle: 50
       desired: 60
       critical: 80
-    - name: k10temp_Tdie
-      path: /sys/class/hwmon/hwmon3/temp2
+    - name: GPU
+      type: GPU
       idle: 50
       desired: 60
       critical: 80
-    - name: amdgpu_mem
-      path: /sys/class/hwmon/hwmon1/temp3
-      idle: 50
-      desired: 60
-      critical: 80
-    - name: amdgpu_edge
-      path: /sys/class/hwmon/hwmon1/temp1
-      idle: 50
-      desired: 60
-      critical: 80
-    - name: amdgpu_junction
-      path: /sys/class/hwmon/hwmon1/temp2
+    - name: Water
+      type: probe
+      hwmon: nct6775
+      hwmon-name: nct6798
+      index: 5
       idle: 50
       desired: 60
       critical: 80
