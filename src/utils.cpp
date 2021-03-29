@@ -52,6 +52,13 @@ char asciiToLower(char in) {
     return in;
 }
 
+std::string currentDateTimeFormatted() {
+    std::time_t now = std::time(nullptr);
+    char buf[80];
+    strftime(buf, sizeof(buf), "%Y-%m-%d.%X", std::localtime(&now));
+    return buf;
+}
+
 const char *LoadingException::what() const noexcept(true) {
     return msg.c_str();
 }

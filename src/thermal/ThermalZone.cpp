@@ -77,7 +77,7 @@ ThermalZone *ThermalZone::loadZone(YAML::Node& node) {
     ThermalZone *zone = nullptr;
 
     if (type == "probe") {
-        zone = new ThermalZone();
+        zone = new ThermalProbe();
     } else if (type == "cpu") {
         zone = new ThermalCpu();
     } else if (type == "gpu") {

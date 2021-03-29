@@ -11,7 +11,7 @@
 #include "../system-utils.h"
 #include "../cooling/CoolingDevice.h"
 #include "../Control.h"
-
+#include "../thermal/ThermalProbe.h"
 
 
 Detector::Detector(Control *control) : control(control) {
@@ -37,7 +37,7 @@ std::vector<ThermalZone *> Detector::getThermalZonesFromHwmon(const std::filesys
             auto zoneLabel = readFile((hwmonPath / (baseName + "_label")).string());
             rtrim(zoneLabel);
 
-            auto zone = new ThermalZone();
+            auto zone = new ThermalProbe();
             zone->path = hwmonPath / baseName;
             zone->name = hwmonName;
             zone->name += "_";

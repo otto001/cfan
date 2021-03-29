@@ -8,7 +8,7 @@
 #include <vector>
 #include <string>
 
-#include "ThermalZone.h"
+#include "ThermalProbe.h"
 
 
 class ThermalGpu : public ThermalZone {

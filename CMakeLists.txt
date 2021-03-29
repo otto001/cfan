@@ -29,7 +29,7 @@ add_executable(cfan src/main.cpp src/Control.cpp src/Control.h
         src/utils.h src/utils.cpp
         src/detection/Detector.cpp src/detection/Detector.h
         src/system-utils.cpp src/system-utils.h
-        src/linux/linux-utils.h src/linux/linux-utils.cpp)
+        src/linux/linux-utils.h src/linux/linux-utils.cpp src/thermal/ThermalProbe.cpp src/thermal/ThermalProbe.h)
 
 
 target_link_libraries(cfan yaml-cpp)

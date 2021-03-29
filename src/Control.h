@@ -21,6 +21,7 @@ public:
     static constexpr char configPath [] = "config.yml";
 #else
     static constexpr char configPath [] = "/etc/cfan/config.yml";
+    static constexpr char logPath [] = "/var/log/cfan.log";
 #endif
     //static constexpr char sysPath [] = "/sys/cfan";
 
@@ -31,7 +32,9 @@ private:
 
     void update();
     void writeToStdout();
+    void writeToLog();
     int interval = 500;
+    bool enableLog = false;
 public:
     [[nodiscard]] int getInterval() const;
     //ms

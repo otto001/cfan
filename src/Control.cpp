@@ -16,6 +16,10 @@ bool Control::load() {
         YAML::Node config;
         config = YAML::LoadFile(configPath);
 
+        interval = readYamlField<int>(config, "interval", interval);
+        enableLog = readYamlField<bool>(config, "log", enableLog);
+
+
         auto thermalConfig = config["thermal"];
         auto thermalZonesConfig = thermalConfig["zones"].as<std::vector<YAML::Node>>();
 
@@ -100,6 +104,9 @@ void Control::init() {
     while (true) {
         auto t1 = std::chrono::high_resolution_clock::now();
         update();
+        if (enableLog) {
+            writeToLog();
+        }
         auto t2 = std::chrono::high_resolution_clock::now();
 
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
@@ -154,6 +161,33 @@ ThermalZone *Control::getThermalZone(const std::string &name) {
     }
     return nullptr;
 }
+
+
+void Control::writeToLog() {
+    auto file = std::ofstream(logPath, std::ios::app);
+    if (file.is_open()) {
+        std::string lineBeginning = "[" + currentDateTimeFormatted() + "] ";
+
+        for (auto zone : thermalZones) {
+            file << lineBeginning
+                 << "thermal "
+                 <<  zone->getName() << "  "
+                 << zone->getTemp() << "°C  "
+                 << zone->getLoad() << "%  "
+                 << round(zone->getScore()*100)/100 << "pt  "
+                 << std::endl;
+        }
+        for (auto device : coolingDevices) {
+            file << lineBeginning
+                 << "cooling "
+                 <<  device->getName() << "  "
+                 << int(round(device->getCurrentSetSpeed()*100)) << "%  "
+                 << device->readRpm() << "rpm  "
+                 << std::endl;
+        }
+    }
+}
+
 
 void Control::writeToStdout() {
     // static Table coolingTable(this);
