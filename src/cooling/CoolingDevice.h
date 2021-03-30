@@ -74,11 +74,14 @@ protected:
     double startSpeed = 0.0;
     double minSpeed = 0.0;
     double maxSpeed = 1.0;
+    double audibleSpeed = 0.0;
+    bool isLazy = false;
     double lazinessStart = 0.6;
     double lazinessStop = 0.6;
     double linearity = 0.0;
 
     std::vector<ThermalZone *> thermalZones;
+    ThermalZone *waterZone;
 public:
 
 

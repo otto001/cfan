@@ -1,3 +1,4 @@
+interval: 1000
 cooling:
   devices:
     - name: front
@@ -5,10 +6,13 @@ cooling:
       hwmon-name: nct6798
       index: 3
       start-speed: 10
+      audible-speed: 25
       linearity: 0
+      lazy: true
       laziness-start: 60
       laziness-stop: 60
       rpm-curve: 0-174-346-524-652-807-945-1070-1180-1285-1370
+      water-zone: Water
       thermal-zones:
         - CPU
     - name: back
@@ -16,10 +20,11 @@ cooling:
       hwmon-name: nct6798
       index: 1
       start-speed: 11
+      audible-speed: 25
       linearity: 30
-      laziness-start: 0
-      laziness-stop: 100
+      lazy: false
       rpm-curve: 0-160-341-525-685-834-984-1136-1252-1387-1500
+      water-zone: Water
       thermal-zones:
         - CPU
     - name: top
@@ -28,10 +33,11 @@ cooling:
       index: 4
       is-pump: false
       start-speed: 10
+      audible-speed: 25
       linearity: 30
-      laziness-start: 0
-      laziness-stop: 100
+      lazy: false
       rpm-curve: 0-167-340-516-663-809-950-1086-1197-1309-1424
+      water-zone: Water
       thermal-zones:
         - CPU
     - name: pump
@@ -43,6 +49,7 @@ cooling:
       min-speed: 20
       max-speed: 50
       rpm-curve: 1248-1244-1246-2364-3435-4455-4470-4485-4485-4470-4530
+      water-zone: Water
       thermal-zones:
         - CPU
 thermal:
@@ -52,3 +59,11 @@ thermal:
       idle: 50
       desired: 60
       critical: 80
+    - name: Water
+      type: probe
+      hwmon: nct6775
+      hwmon-name: nct6798
+      index: 5
+      idle: 26
+      desired: 32
+      critical: 40

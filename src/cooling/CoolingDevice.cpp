@@ -150,6 +150,17 @@ std::pair<double, ThermalZone*> CoolingDevice::getHottestZone() {
             hottestZone = zone;
         }
     }
+
+    if (waterZone && waterZone != hottestZone) {
+        auto waterZoneScore = waterZone->getScore();
+        /*
+         * if waterZone is under desired, the waterMultiplier will be below 1, therefore lowering cooling
+         * if waterZone is over desired, the waterMultiplier will be 1, therefore allowing full cooling
+         * */
+        auto waterOffset = 1.0 - std::max(0.0, std::min(1.0, waterZoneScore-1));
+        currentHighScore -= waterOffset;
+    }
+
     return {currentHighScore, hottestZone};
 }
 
@@ -160,23 +171,34 @@ bool CoolingDevice::load(YAML::Node node) {
     index = readYamlField<uint8_t>(node, "index") - 1;
 
 
-    lazinessStart = readYamlField<double>(node, "laziness-start", 60);
-    lazinessStop = readYamlField<double>(node, "laziness-stop", 60);
-    lazinessStart /= 100.0;
-    lazinessStop /= 100.0;
+    isLazy = readYamlField<bool>(node, "lazy", false);
+
+    if (isLazy) {
+        lazinessStart = readYamlField<double>(node, "laziness-start", 60);
+        lazinessStop = readYamlField<double>(node, "laziness-stop", 60);
+        lazinessStart /= 100.0;
+        lazinessStop /= 100.0;
+    }
+
 
     linearity = readYamlField<double>(node, "linearity", 0.0);
     linearity /= 100.0;
 
     startSpeed = readYamlField<double>(node, "start-speed", 0.0);
     minSpeed = readYamlField<double>(node, "min-speed", startSpeed);
+    audibleSpeed = readYamlField<double>(node, "audible-speed", 0.0);
+
     maxSpeed = readYamlField<double>(node, "max-speed", 100.0);
 
     startSpeed /= 100.0;
     minSpeed /= 100.0;
     maxSpeed /= 100.0;
+    audibleSpeed /= 100.0;
 
     isPump = readYamlField<bool>(node, "is-pump", false);
+    if (isPump) {
+        isLazy = false;
+    }
 
     try {
         auto curveString = readYamlField<std::string>(node, "rpm-curve");
@@ -199,6 +221,12 @@ bool CoolingDevice::load(YAML::Node node) {
         if (zone) {
             thermalZones.push_back(zone);
         }
+    }
+
+    auto waterZoneName =  readYamlField<std::string>(node, "water-zone", "");
+    if (!waterZoneName.empty()) {
+        waterZone = control->getThermalZone(waterZoneName);
+        thermalZones.push_back(waterZone);
     }
 
 #if !WIN32
@@ -247,7 +275,6 @@ void CoolingDevice::update() {
 
     double deltaSeconds = double(control->getInterval()) / 1000.0;
 
-
     if (currentHighScore < 1) {
         // under idle
         buildUp -= buildUp*0.25*deltaSeconds;
@@ -267,19 +294,30 @@ void CoolingDevice::update() {
     buildUp = std::max(0.0, buildUp);
 
     bool started = currentSetSpeed != 0;
-    if (!started && ((buildUp > buildUpThreshold * lerp(1.0, 1.5, lazinessStart)) || lazinessStart == 0 || isPump)) {
-        started = true;
-    } else if (started && buildUp < buildUpThreshold * lerp(1.0, 0, lazinessStop)) {
-        started = false;
+    if (started) {
+        if (isLazy && buildUp < buildUpThreshold * lerp(1.0, 0, lazinessStop)) {
+            started = false;
+        }
+    } else {
+        if (!isLazy || buildUp > buildUpThreshold * lerp(1.0, 1.5, lazinessStart)) {
+            started = true;
+        }
     }
 
     double targetSpeed = currentSetSpeed;
     if (!started) {
         targetSpeed = 0;
     } else {
-        auto curveSpeed = getSpeedFromCurve(std::max(currentHighScore - 2.0, 0.0));
-        auto delta = curveSpeed - currentSetSpeed;
 
+        // if the score is over idle there is no need for immediate action. But as long as the fan doesn't go above its
+        // audible speed, it can still improve thermals
+        auto curveSpeed = getSpeedFromCurve(std::max(currentHighScore - 2.0, 0.0));
+
+        if (currentHighScore > 1.0 && audibleSpeed > minSpeed && curveSpeed < audibleSpeed) {
+            curveSpeed = audibleSpeed;
+        }
+
+        auto delta = curveSpeed - currentSetSpeed;
         if (delta > 0.15) {
             targetSpeed = curveSpeed;
         } else if (std::abs(delta) > 0.03) {
