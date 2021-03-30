@@ -19,6 +19,11 @@ public:
 
 protected:
     bool load(YAML::Node node) override;
+    int _getTemp() override;
+
+#if WIN32
+    int32_t index;
+#endif
 
 public:
     YAML::Node* writeToYamlNode() override;

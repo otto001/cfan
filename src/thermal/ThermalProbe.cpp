@@ -2,19 +2,29 @@
 // Created by root on 3/29/21.
 //
 
+#include <winfan/winfan.h>
 #include "ThermalProbe.h"
 #include "../utils.h"
 
 #if WIN32
-#else
-#include "../linux/linux-utils.h"
 #endif
 
+
+int ThermalProbe::_getTemp() {
+#if WIN32
+    int32_t result;
+    WinFan::readTemperature(index, &result);
+    return result;
+#else
+    ThermalZone::_getTemp()
+#endif
+}
 
 bool ThermalProbe::load(YAML::Node node) {
     auto result = ThermalZone::load(node);
     if (result) {
 #if WIN32
+        index = readYamlField<uint8_t>(node, "index");
 #else
         auto index = readYamlField<uint8_t>(node, "index");
         auto hwmonName = readYamlField<std::string>(node, "hwmon-name");

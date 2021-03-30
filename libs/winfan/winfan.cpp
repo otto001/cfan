@@ -44,6 +44,21 @@ SuperIo* getSuperIO() {
     return superIo;
 }
 
+bool WinFan::readTemperature(uint8_t tempIndex, int32_t* result, bool force) {
+    auto superIo = getSuperIO();
+    if (!superIo) return false;
+    superIo->timedUpdate(force);
+    if (tempIndex >= superIo->getTemperatures().size()) return false;
+
+    auto temp = (int32_t) superIo->getTemperatures()[tempIndex];
+
+    if (result) {
+        *result = temp;
+    }
+
+    return true;
+}
+
 bool WinFan::readFanRpm(uint8_t fanIndex, int32_t* result, bool force) {
     auto superIo = getSuperIO();
     if (!superIo) return false;
