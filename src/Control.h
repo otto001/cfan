@@ -19,6 +19,8 @@ public:
 
 #if WIN32
     static constexpr char configPath [] = "config.yml";
+    static constexpr char logPath [] = "cfan.log";
+
 #else
     static constexpr char configPath [] = "/etc/cfan/config.yml";
     static constexpr char logPath [] = "/var/log/cfan.log";
