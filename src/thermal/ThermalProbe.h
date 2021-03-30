@@ -18,7 +18,7 @@ public:
 
 
 protected:
-    bool load(YAML::Node node) override;
+    bool load(YAML::Node& node) override;
     int _getTemp() override;
 
 #if WIN32

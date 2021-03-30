@@ -59,7 +59,7 @@ double ThermalZone::getScore() {
     return 3;
 }
 
-bool ThermalZone::load(YAML::Node node) {
+bool ThermalZone::load(YAML::Node& node) {
     idle = readYamlField<int>(node, "idle", 50);
     desired = readYamlField<int>(node, "desired", 60);
     critical = readYamlField<int>(node, "critical", 80);

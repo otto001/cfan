@@ -18,7 +18,7 @@ public:
 protected:
     int _getLoad() override;
     int _getTemp() override;
-    bool load(YAML::Node node) override;
+    bool load(YAML::Node& node) override;
 
 };
 

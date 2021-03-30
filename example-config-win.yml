@@ -15,6 +15,7 @@ cooling:
       water-zone: Water
       thermal-zones:
         - CPU
+        - GPU
     - name: back
       hwmon: nct6775
       hwmon-name: nct6798
@@ -27,6 +28,7 @@ cooling:
       water-zone: Water
       thermal-zones:
         - CPU
+        - GPU
     - name: top
       hwmon: nct6775
       hwmon-name: nct6798
@@ -40,6 +42,7 @@ cooling:
       water-zone: Water
       thermal-zones:
         - CPU
+        - GPU
     - name: pump
       hwmon: nct6775
       hwmon-name: nct6798
@@ -52,10 +55,16 @@ cooling:
       water-zone: Water
       thermal-zones:
         - CPU
+        - GPU
 thermal:
   zones:
     - name: CPU
       type: CPU
+      idle: 50
+      desired: 60
+      critical: 80
+    - name: GPU
+      type: GPU
       idle: 50
       desired: 60
       critical: 80

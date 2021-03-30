@@ -3,7 +3,6 @@ project(cfan)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-add_compile_definitions(WIN32=100)
 IF (WIN32)
     set(CMAKE_CXX_FLAGS "-Os")
 ELSE()

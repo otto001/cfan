@@ -26,7 +26,7 @@ int ThermalGpu::_getLoad() {
     return ThermalZone::_getLoad();
 }
 
-bool ThermalGpu::load(YAML::Node node) {
+bool ThermalGpu::load(YAML::Node& node) {
     auto result = ThermalZone::load(node);
 #if !WIN32
     if (result) {

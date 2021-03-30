@@ -2,11 +2,13 @@
 // Created by root on 3/29/21.
 //
 
-#include <winfan/winfan.h>
 #include "ThermalProbe.h"
 #include "../utils.h"
 
 #if WIN32
+#include <winfan/winfan.h>
+#else
+#include "../linux/linux-utils.h"
 #endif
 
 
@@ -16,11 +18,11 @@ int ThermalProbe::_getTemp() {
     WinFan::readTemperature(index, &result);
     return result;
 #else
-    ThermalZone::_getTemp()
+    return ThermalZone::_getTemp();
 #endif
 }
 
-bool ThermalProbe::load(YAML::Node node) {
+bool ThermalProbe::load(YAML::Node& node) {
     auto result = ThermalZone::load(node);
     if (result) {
 #if WIN32

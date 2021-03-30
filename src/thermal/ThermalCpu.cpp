@@ -30,7 +30,7 @@ int ThermalCpu::_getLoad() {
     return ThermalZone::_getLoad();
 }
 
-bool ThermalCpu::load(YAML::Node node) {
+bool ThermalCpu::load(YAML::Node& node) {
     auto result = ThermalZone::load(node);
 #if !WIN32
     if (getHwmonPathByName(path, "k10temp")) {

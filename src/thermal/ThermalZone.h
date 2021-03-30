@@ -41,7 +41,7 @@ protected:
 
     virtual int _getTemp();
     virtual int _getLoad();
-    virtual bool load(YAML::Node node);
+    virtual bool load(YAML::Node& node);
 
 public:
     virtual YAML::Node* writeToYamlNode();
