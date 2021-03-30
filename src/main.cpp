@@ -35,8 +35,12 @@ int main(int argc, char* argv[]) {
         std::cout << "Detection complete." << std::endl;
         return 0;
     } else if (std::find(args.begin(), args.end(), "--smartfaniv") != args.end()) {
-        control.setFansToSmartFanIV();
+        control.setAllFansToSmartFanIV();
         std::cout << "Reset all fans to SmartFanIV control." << std::endl;
+        return 0;
+    } else if (std::find(args.begin(), args.end(), "--fullspeed") != args.end()) {
+        control.setAllFansToSpeed(1.0);
+        std::cout << "Set all fans to full speed." << std::endl;
         return 0;
     } else {
         if (std::find(args.begin(), args.end(), "--debug") != args.end()) {

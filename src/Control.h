@@ -48,7 +48,8 @@ public:
     [[noreturn]] void run();
     [[noreturn]] void curses();
     void detect();
-    void setFansToSmartFanIV();
+    void setAllFansToSmartFanIV();
+    void setAllFansToSpeed(double speed);
 
     ThermalZone* getThermalZone(const std::string& name);
 
